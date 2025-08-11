@@ -18,8 +18,9 @@ const limiter = rateLimit({
   max: 100, 
 });
 app.use(limiter);
-
 const port = 5001
+
+const authRoutes = require('./routes/authRoutes');
 
 
 
@@ -29,6 +30,9 @@ const port = 5001
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
+
+app.use('/user',authRoutes);
+
 app.listen(port, () => {
   console.log(`http://localhost:${port}`)
 })
