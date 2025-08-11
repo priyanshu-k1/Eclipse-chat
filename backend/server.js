@@ -4,6 +4,7 @@ const compression = require('compression');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
+require('dotenv').config();
 
 const app = express()
 
@@ -20,10 +21,9 @@ const limiter = rateLimit({
 app.use(limiter);
 const port = 5001
 
+const connectDB = require('./config/db');
+
 const authRoutes = require('./routes/authRoutes');
-
-
-
 
 
 
@@ -33,6 +33,9 @@ app.get('/', (req, res) => {
 
 app.use('/user',authRoutes);
 
+
+// Connect to DB before starting server
+connectDB();
 app.listen(port, () => {
   console.log(`http://localhost:${port}`)
 })
