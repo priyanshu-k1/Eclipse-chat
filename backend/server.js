@@ -49,6 +49,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/messages', require('./routes/messageRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -90,10 +91,6 @@ process.on('SIGINT', () => {
     console.log('Process terminated');
   });
 });
-
-
-
-
 
 // Start the server
 startServer();

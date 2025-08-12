@@ -1,0 +1,11 @@
+const express = require('express');
+const router = express.Router();
+const messageController = require('../controllers/messagecontroller');
+const { authenticate } = require('../middleware/authMiddleware'); 
+
+router.post('/send', authenticate, messageController.sendMessage);
+router.get('/conversation/:eclipseId', authenticate, messageController.getConversation);
+router.get('/conversations', authenticate, messageController.getAllConversations);
+router.patch('/:messageId/save', authenticate, messageController.saveMessage);
+
+module.exports = router;

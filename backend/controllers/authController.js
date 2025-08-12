@@ -40,26 +40,44 @@ exports.signup = async (req, res) => {
 };
 
 exports.signin = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ message: 'Invalid credentials' });
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-        res.status(200).json({
-            message: 'User signed in successfully',
-            token,
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                displayName: user.displayName,
-                avatar: user.avatar,
-                eclipseId: user.eclipseId
-            }
-        });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
     }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+    user.tokens.push({ token });
+    await user.save();
+    res.status(200).json({
+      message: 'User signed in successfully',
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        displayName: user.displayName,
+        avatar: user.avatar,
+        eclipseId: user.eclipseId
+      }
+    });
+
+  } catch (err) {
+    console.error('Signin error:', err.message);
+    res.status(500).json({ 
+      message: 'Server error during signin',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
 };
