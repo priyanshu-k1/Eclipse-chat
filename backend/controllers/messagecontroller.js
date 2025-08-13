@@ -34,17 +34,24 @@ exports.sendMessage = async (req, res) => {
         ]);
         const io = req.app.get('io');
         if (io) {
+            
             const roomId = generateRoomId(req.user.eclipseId, recipientEclipseId);
-            io.to(roomId).emit('receive_message', {
+            console.log(`🎯 Sender eclipseId: ${req.user.eclipseId}`);
+            console.log(`🎯 Recipient eclipseId: ${recipientEclipseId}`);
+            console.log(`🎯 Generated room ID: ${roomId}`);
+            console.log(`🎯 Personal room: user_${recipientEclipseId}`);
+            const messageData = {
                 id: savedMessage._id,
                 content: decryptMessage(encryptedData, iv, authTag), 
                 sender: savedMessage.sender,
                 receiver: savedMessage.receiver,
                 timestamp: savedMessage.createdAt,
                 expiresAt: savedMessage.expiresAt
-            });
+            };
+            io.to(roomId).emit('receive_message', messageData);
+            io.to(`user_${recipientEclipseId}`).emit('receive_message', messageData);
+            console.log(`📤 Message emitted to both rooms: ${roomId} and user_${recipientEclipseId}`);
         }
-
         res.status(201).json({ 
             message: 'Message sent securely',
             messageId: savedMessage._id,

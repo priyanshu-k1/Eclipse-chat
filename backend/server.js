@@ -38,6 +38,7 @@ app.use(limiter);
 
 // Initialize Socket.IO
 const io = initializeSocket(server);
+app.set('io', io);
 
 // API Routes
 app.get('/', (req, res) => {
