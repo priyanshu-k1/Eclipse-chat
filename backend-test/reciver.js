@@ -1,12 +1,12 @@
 const { io } = require("socket.io-client");
 
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OWMxZTY0MmZhYWIyYWRjZDM4ZWNlNiIsImlhdCI6MTc1NTA2MTg5MiwiZXhwIjoxNzU1MTQ4MjkyfQ.tXE4gxHmFL3XxPnrnz7N6uiwUCnHpOo5Hez3m9n3MMQ";
-const receiverId = "SJU0J5UY"; 
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OWMyYTU4NDNlMzcyMmQ1N2RlYjhlMiIsImlhdCI6MTc1NTA2NTAwNSwiZXhwIjoxNzU1MTUxNDA1fQ.Jaqjqebmr3q8-kyZVlsdS4_BMBNfH7gvUtR5rfQQ0Cw";
+const receiverId = "XQINDXMG"; 
 
 // First test without auth to see if basic connection works
 const socket = io("http://localhost:5001", {
     // Temporarily remove auth to test basic connection
-    // auth: { token: `Bearer ${token}` }
+    auth: { token: `Bearer ${token}` }
 });
 
 socket.on("connect", () => {
