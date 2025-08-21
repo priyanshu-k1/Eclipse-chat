@@ -11,7 +11,7 @@ const LandingPage = () => {
   };
 
   const handleLogin = () => {
-    console.log('Login clicked - add login page route');
+   navigate('/login');
   };
 
   return (

@@ -7,7 +7,6 @@
   color: #F5F5F7;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
-
 .maindiv {
   overflow: hidden;
   padding: 0;
@@ -490,6 +489,9 @@
     width: fit-content;
     font-size: 0.8rem;
     padding: 0.6rem 1.2rem;
+  }
+  .footer-note:hover {
+    transform: translateY(-8px);
   }
 }
 
