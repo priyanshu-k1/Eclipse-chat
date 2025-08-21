@@ -15,7 +15,7 @@
   width: 100vw;
   min-height: 100vh;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   position: relative;
 }
 
@@ -30,40 +30,71 @@
   pointer-events: none;
 }
 
+/* NAVBAR STYLES */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  position: relative;
+  z-index: 10;
+  background: transparent;
+}
+
+.navLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.navTitle {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #F5F5F7 0%, #CCCCCC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.navRight {
+  display: flex;
+  align-items: center;
+}
+
+/* CONTENT WRAPPER */
+.contentWrapper {
+  display: flex;
+  flex: 1;
+  min-height: calc(100vh - 80px); /* Account for navbar height */
+}
+
 .textHolder {
   width: 45vw;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
   z-index: 2;
 }
 
+/* Remove old appIntro styles since it's now in navbar */
 .appIntro {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 1rem 2rem;
-  background: transparent;
-  position: relative;
-  overflow: hidden;
+  display: none; /* Hide the old app intro since it's now in navbar */
 }
-.appIntro h1{
-  font-size: 2rem;
-}
+
 .logo-animated {
   width: 2.5rem;
   height: 2.5rem;
-  margin-right: 0.75rem;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
   position: relative;
   z-index: 2;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes logoEntry {
-  to {
-    transform: translateX(0) rotate(0deg) scale(1);
-  }
+.logo-animated:hover {
+  transform: translateY(-2px) rotate(-5deg) scale(1.05);
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
 }
 
 @keyframes logoFloat {
@@ -75,50 +106,11 @@
   }
 }
 
-
-.title-animated {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #F5F5F7;
-  letter-spacing: -0.02em;
-  transform: translateX(30px);
-  opacity: 0;
-  position: relative;
-  background: linear-gradient(135deg, #F5F5F7 0%, #CCCCCC 50%, #F5F5F7 100%);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-@keyframes underlineGrow {
-  to {
-    width: 100%;
-  }
-}
-
-/* Interactive Hover Effects */
-.appIntro:hover .logo-animated {
-  animation-play-state: paused;
-  transform: translateY(-2px) rotate(-5deg) scale(1.05);
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-
-
-.appIntro:hover .title-animated {
-  animation-play-state: paused;
-  transform: translateX(3px) scale(1.02);
-  transition: all 0.3s ease;
-}
-
 .welcomeArea {
   flex: 1;
   display: flex;
   align-items: center;
-  padding: 0 2.5rem;
-  padding-bottom: 4rem;
+  padding: 2rem 2.5rem;
 }
 
 .heroText {
@@ -126,7 +118,6 @@
 }
 
 .heroText h2 {
-  margin-top: -4rem;
   font-size: 3.5rem;
   font-weight: 800;
   line-height: 1.1;
@@ -145,6 +136,11 @@
   line-height: 1.6;
   margin-bottom: 3.5rem;
   font-weight: 400;
+}
+
+.heroTextSpan {
+  color: #8A2BE2 !important;
+  -webkit-text-fill-color: #8A2BE2 !important;
 }
 
 .ctaButton {
@@ -190,18 +186,10 @@
 
 .imageHolder {
   width: 55vw;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
   background: linear-gradient(45deg, rgba(30, 30, 35, 0.3) 0%, rgba(20, 20, 25, 0.1) 100%);
-}
-
-.loginSection {
-  position: absolute;
-  top: 2rem;
-  right: 2.5rem;
-  z-index: 3;
 }
 
 .loginButton {
@@ -239,7 +227,6 @@
   height: auto;
   filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
   scale: 1.1;
-  /* animation: float 6s ease-in-out infinite; */
 }
 
 @keyframes float {
@@ -314,6 +301,9 @@
 .socialLink:hover .linkIcon {
   transform: scale(1.1);
 }
+.textHolderfooterNote{
+  display: none !important;
+}
 
 .footer-note {
   position: absolute;
@@ -386,242 +376,172 @@
   }
 }
 
-/* RESPONSIVE DESIGN - ORGANIZED BY BREAKPOINT */
-
-/* Large Tablets and Small Desktops */
-@media (max-width: 1024px) {
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
   .maindiv {
-    flex-direction: column;
     min-height: 100vh;
-    height: auto;
+    overflow-x: hidden;
+    
   }
-  
-  .textHolder {
-    width: 100vw;
-    min-height: auto;
-    height: auto;
+
+  /* Navigation Bar */
+  .navbar {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
   }
-  
-  .imageHolder {
-    width: 100vw;
-    min-height: 50vh;
-    height: auto;
+
+  .navLeft {
+    flex: 1;
+    justify-content: flex-start;
   }
-  
-  .heroText h2 {
-    font-size: 2.8rem;
+
+  .navTitle {
+    font-size: 1.4rem;
   }
-  
-  .appIntro {
-    padding: 1.5rem 2rem;
+
+  .navRight {
+    flex: 0;
   }
-  
+
+  .loginButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  /* Content Layout */
+  .contentWrapper {
+    flex-direction: row;
+    min-height: calc(100vh - 60px);
+  }
+  .textHolder{
+    align-items: center;
+
+  }
+
+  .textHolder, .imageHolder {
+    width: 100%;
+  }
+
+
+  /* Hero Text */
   .welcomeArea {
-    padding: 0 2rem;
-    padding-bottom: 2rem;
+    padding: 1.5rem 1rem;
+    text-align: center;
   }
-  
+
+  .heroText h2 {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+
+  .heroText p {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .ctaButton {
+    width: 100%;
+    max-width: 280px;
+    padding: 1rem;
+    margin: 0 auto;
+  }
+
+  /* Image Section */
+  .imageContainer {
+    padding: 1rem;
+    min-height: 300px;
+  }
+
+  .landingImage {
+    max-width: 90%;
+    scale: 1;
+  }
+
+  /* Social Links */
   .socialLinks {
-    position: static;
-    margin-top: 2rem;
-    padding: 0 2rem;
+    min-width: 80%;
+    position: relative;
     bottom: auto;
     left: auto;
     right: auto;
+    padding: 0 1rem 2rem;
   }
-  
+
+  .linksContainer {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .socialLink {
+    width: 100%;
+    max-width: 250px;
+    justify-content: center;
+  }
+
+  /* Footer */
   .footer-note {
     position: relative;
     bottom: auto;
     left: auto;
     transform: none;
-    margin: 2rem auto 0;
+    margin: 1rem auto;
     width: fit-content;
+    font-size: 0.8rem;
+    padding: 0.6rem 1.2rem;
   }
 }
 
-/* Tablets */
-@media (max-width: 768px) {
-  .maindiv {
-    min-height: 100vh;
-  }
-  
-  .appIntro {
-    padding: 1.5rem;
-  }
-  
-  .logo-animated {
-    width: 2.25rem;
-    height: 2.25rem;
-    margin-right: 0.5rem;
-  }
-  
-  .title-animated {
-    font-size: 1.3rem;
-  }
-  
-  /* Disable hover effects on mobile */
-  .appIntro:hover .logo-animated,
-  .appIntro:hover .title-animated {
-    transform: none;
-    animation-play-state: running;
-  }
-  
-  .welcomeArea {
-    padding: 0 1.5rem;
-    padding-bottom: 1.5rem;
-  }
-  
-  .heroText {
-    max-width: 100%;
-  }
-  
-  .heroText h2 {
-    font-size: 2.2rem;
-    margin-bottom: 1rem;
-  }
-  
-  .heroText p {
-    font-size: 1rem;
-    margin-bottom: 2rem;
-  }
-  
-  .ctaButton {
-    padding: 0.875rem 1.75rem;
-    font-size: 0.9rem;
-  }
-  
-  .imageContainer {
-    padding: 1.5rem;
-  }
-  
-  .landingImage {
-    scale: 1;
-    max-width: 90%;
-  }
-  
-  .loginSection {
-    top: 1rem;
-    right: 1.5rem;
-  }
-  
-  .loginButton {
-    padding: 0.625rem 1.25rem;
-    font-size: 0.85rem;
-  }
-  
-  .linksContainer {
-    justify-content: center;
-    gap: 0.75rem;
-  }
-  
-  .socialLink {
-    padding: 0.625rem 0.875rem;
-    font-size: 0.8rem;
-  }
-  
-  .linkIcon {
-    width: 1rem;
-    height: 1rem;
-  }
-  
-  .socialLinks {
-    padding: 0 1.5rem;
-  }
-  
-  .footer-note {
-    font-size: 0.8rem;
-    padding: 0.625rem 1.25rem;
-    margin: 1.5rem auto 0;
-    max-width: calc(100% - 3rem);
-  }
-  
-  .footer-note .heart {
-    font-size: 0.9rem;
-  }
-}
-
-/* Mobile Phones */
+/* Extra Small Screens */
 @media (max-width: 480px) {
-  .appIntro {
-    padding: 1rem;
-    flex-direction: column;
-    text-align: center;
-    gap: 0.5rem;
+  .navbar {
+    padding: 0.5rem;
   }
-  
+
+  .navTitle {
+    font-size: 1.2rem;
+  }
+
   .logo-animated {
-    width: 3rem;
-    height: 3rem;
-    margin-right: 0;
-    margin-bottom: 0.5rem;
+    width: 2rem;
+    height: 2rem;
   }
-  
-  .title-animated {
-    font-size: 1.5rem;
+   /* Content Layout */
+  .contentWrapper {
+    flex-direction: column-reverse;
+    min-height: calc(100vh - 60px);
   }
-  
-  .welcomeArea {
-    padding: 0 1rem;
-    text-align: center;
+  .textHolder{
+    align-items: center;
+
   }
-  
+
+  .textHolder, .imageHolder {
+    width: 100%;
+  }
+  .imageHolder .footer-note{
+    display: none;
+  }
+
   .heroText h2 {
-    font-size: 1.8rem;
-    line-height: 1.2;
+    font-size: 1.7rem;
   }
-  
+
   .heroText p {
     font-size: 0.9rem;
-    margin-bottom: 1.5rem;
   }
-  
-  .ctaButton {
-    width: 100%;
-    max-width: 200px;
-    padding: 1rem;
-  }
-  
+
   .imageContainer {
-    padding: 1rem;
-    min-height: 300px;
+    min-height: 250px;
   }
-  
-  .landingImage {
-    max-width: 95%;
-  }
-  
-  .loginSection {
-    top: 0.5rem;
-    right: 1rem;
-  }
-  
-  .loginButton {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-  }
-  
-  .linksContainer {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  .socialLink {
-    width: 100%;
-    max-width: 200px;
-    justify-content: center;
-  }
-  
-  .socialLinks {
-    padding: 0 1rem;
-  }
-  
+
   .footer-note {
     font-size: 0.75rem;
     padding: 0.5rem 1rem;
-    line-height: 1.4;
-    border-radius: 15px;
+  }
+  .textHolderfooterNote{
+    display: block !important;
   }
 }
 
@@ -635,15 +555,15 @@
     font-size: 0.85rem;
   }
   
-  .appIntro {
-    padding: 0.75rem;
+  .navbar {
+    padding: 0.5rem;
   }
   
   .welcomeArea {
-    padding: 0 0.75rem;
+    padding: 1rem 0.5rem;
   }
   
   .socialLinks {
-    padding: 0 0.75rem;
+    padding: 0 0.5rem 1.5rem;
   }
 }
