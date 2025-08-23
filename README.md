@@ -24,10 +24,10 @@ It focuses on **end-to-end encryption**, **ephemeral messages**, and **zero-trac
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 **Frontend:** React, Flutter (Dart/Kotlin for mobile)  
 **Backend:** Node.js, Express.js, Socket.IO  
-**Database:** MongoDB (Atlas, Free Tier)  
+**Database:** MongoDB (Atlas)  
 **Encryption:** Node Crypto (AES-256-GCM)  
 **Authentication:** JWT + bcrypt  
 
