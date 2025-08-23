@@ -92,6 +92,17 @@ const Login = () => {
 
     return (
         <div className="auth-container">
+            <div className="stars">
+                <div className="star"></div>
+                <div className="star"></div>
+                <div className="star"></div>
+                <div className="star"></div>
+                <div className="star"></div>
+                <div className="star"></div>
+                <div className="star"></div>
+                <div className="star"></div>
+                <div className="star"></div>
+            </div>
             <div className="card">
                 <h2>Step Into Your Private World</h2>
                 <p>Encrypted. Secure. Always yours.</p>

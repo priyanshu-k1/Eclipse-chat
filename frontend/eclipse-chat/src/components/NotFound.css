@@ -10,7 +10,7 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   padding: 40px 20px;
   position: relative;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 /* Eclipse Background Animation */

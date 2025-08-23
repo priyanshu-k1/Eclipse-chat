@@ -26,7 +26,6 @@ const comparePassword = async (password, hashedPassword) => {
   return await bcrypt.compare(password, hashedPassword);
 };
 
-// Error mapping object
 const authErrors = {
   // Validation Errors
   "Username must be at least 3 characters": "Username should be minimum 3 characters long",
