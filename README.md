@@ -8,20 +8,19 @@
 
 ---
 
-## 🚀 Overview
+## Overview
 **Eclipse Chat** is a highly privacy-oriented messaging platform built for modern communication.  
 It focuses on **end-to-end encryption**, **ephemeral messages**, and **zero-tracking policies**, giving you complete control over your conversations.  
 
 ---
 
-## ✨ Features
-- 🔒 **End-to-End Encryption (256–512 bit)** – every message is secure by default.  
-- ⏳ **Ephemeral Messaging** – chats vanish after reading, unless both users consent to save.  
-- 📵 **Anti-Screenshot & Secure Media** – media stored in special encrypted format.  
-- 📤 **Consent-Driven Saving** – both sender and receiver must agree before saving.  
-- 🚫 **No Ads. No Tracking. Zero Metadata Logging.**  
-- 🕵️ **Stealth/Decoy Mode** – extra privacy when you need it.  
-- 🌐 **Username-Based User Discovery** – no phone number required.  
+## Features
+- **End-to-End Encryption 256** – every message is secure by default.  
+- **Ephemeral Messaging** – chats vanish after reading, unless both users consent to save.  
+- **Anti-Screenshot & Secure Media** – media stored in special encrypted format.  
+- **Consent-Driven Saving** – both sender and receiver must agree before saving.  
+- **No Ads. No Tracking. Zero Metadata Logging.**  
+- **Username-Based User Discovery** – no phone number required.  
 
 ---
 
@@ -34,7 +33,7 @@ It focuses on **end-to-end encryption**, **ephemeral messages**, and **zero-trac
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 ```bash
 Eclipse-chat/
 │
