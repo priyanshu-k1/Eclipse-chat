@@ -85,7 +85,7 @@ const LoadingPage = () => {
       </div>
       
       <div className="bottom-tagline">
-        <p><span class="btn-icon material-symbols-outlined">shield_locked</span>Privacy-first • Secure • Ephemeral</p>
+        <p><span className="btn-icon material-symbols-outlined">shield_locked</span>Privacy-first • Secure • Ephemeral</p>
       </div>
     </div>
   );

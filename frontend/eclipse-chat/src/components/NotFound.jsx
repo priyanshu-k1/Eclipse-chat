@@ -50,7 +50,7 @@ function NotFound() {
         </div>
         
         <div className="privacy-reminder">
-          <span class="btn-icon material-symbols-outlined">shield_locked</span>
+          <span className="btn-icon material-symbols-outlined">shield_locked</span>
           <span>Secure • Private • Ephemeral</span>
         </div>
       </div>

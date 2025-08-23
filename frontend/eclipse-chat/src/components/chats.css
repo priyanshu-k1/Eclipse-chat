@@ -15,6 +15,19 @@
     flex-direction: column;
     gap: 0.2rem;
 }
+.loading-text{
+    color: #594ef4;
+    font-size: 2.5rem;
+    text-align: center;
+}
+.loading-text2{
+    color: #36c4ec;
+    font-size: 2rem;
+    text-align: center;
+}
+.chats-container p, .chats-container h1 {
+     text-align: center;
+}
 .user-name {
   color: #8A2BE2 !important;
   transition: color 0.3s ease-in-out;

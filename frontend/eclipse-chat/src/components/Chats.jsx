@@ -47,7 +47,12 @@ const Chats = () => {
   }, [navigate]);
 
   if (loading) {
-    return <p>Checking authentication...</p>;
+    return (
+      <div className="chats-container">
+        <p className="loading-text">Checking authentication...</p>
+        <p className="loading-text2">Please wait </p>
+      </div>
+    );
   }
 
   return (
