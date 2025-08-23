@@ -5,12 +5,7 @@
     box-sizing: border-box;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
-body{
-    /* background-color: #0D0D0F ; */
-    background-image: url("../assets/textured-background.png");
-    background-size: cover;
-    background-position: center;
-}
+    
 .auth-container{
     display: flex;
     align-items: center;
@@ -19,6 +14,12 @@ body{
     overflow: hidden;
     flex-direction: column;
     gap: 0.2rem;
+    min-height: 100vh;
+    display: flex;
+    background: linear-gradient(135deg, #0B0C10 0%, #1F1F2E 50%, #0B0C10 100%);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 40px 20px;
+    position: relative;
 }
 .card{
     background-color: rgb(30, 30, 34,0.1) !important;
@@ -206,4 +207,51 @@ body{
         padding: 10px;
         font-size: 0.9rem;
     }
+}
+
+
+
+/* Star animation */
+.stars {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #FFFFFF;
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+.star:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+.star:nth-child(2) { top: 80%; left: 20%; animation-delay: 1s; }
+.star:nth-child(3) { top: 10%; left: 50%; animation-delay: 2s; }
+.star:nth-child(4) { top: 70%; left: 80%; animation-delay: 0.5s; }
+.star:nth-child(5) { top: 30%; left: 70%; animation-delay: 1.5s; }
+.star:nth-child(6) { top: 60%; left: 15%; animation-delay: 2.5s; }
+.star:nth-child(7) { top: 15%; left: 85%; animation-delay: 3s; }
+.star:nth-child(8) { top: 90%; left: 60%; animation-delay: 0.8s; }
+.star:nth-child(9) { top: 40%; left: 25%; animation-delay: 1.8s; }
+.star:nth-child(10) { top: 85%; left: 90%; animation-delay: 2.2s; }
+.star:nth-child(11) { top: 25%; left: 40%; animation-delay: 3.5s; }
+.star:nth-child(12) { top: 75%; left: 45%; animation-delay: 0.3s; }
+
+@keyframes twinkle {
+  0%, 100% { 
+    opacity: 0.3; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.2);
+  }
 }

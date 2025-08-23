@@ -16,7 +16,6 @@ const LandingPage = () => {
 
   return (
     <div className='maindiv'>
-      {/* Navigation Bar */}
       <nav className="navbar">
         <div className="navLeft">
           <img src={applogo} alt="Eclipse Chat" className="logo-animated" />
@@ -27,7 +26,7 @@ const LandingPage = () => {
         </div>
       </nav>
 
-      {/* Main Content */}
+
       <div className='contentWrapper'>
         <div className='textHolder'>
           <div className="welcomeArea">
