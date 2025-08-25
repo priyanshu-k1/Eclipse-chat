@@ -11,12 +11,65 @@ exports.sendMessage = async (req, res) => {
                 message: 'Recipient Eclipse ID and content are required' 
             });
         }
+        
         const recipient = await findUserByEclipseId(recipientEclipseId);
         if (!recipient) {
             return res.status(404).json({ 
                 message: 'Recipient not found' 
             });
         }
+        
+        // Check if users are friends
+        const isFriend = req.user.friends.includes(recipient._id) || recipient.friends.includes(req.user.id);
+        
+        if (!isFriend) {
+            // Check for existing orbit request
+            let orbit = await Orbit.findOne({
+                senderId: req.user.id,
+                receiverId: recipient._id
+            });
+            
+            // If no orbit exists, create one
+            if (!orbit) {
+                orbit = new Orbit({
+                    senderId: req.user.id,
+                    receiverId: recipient._id,
+                    status: 'pending',
+                    messageCount: 0
+                });
+            }
+            
+            // Check if orbit was denied within the last 2 weeks
+            if (orbit.status === 'denied' && orbit.deniedAt) {
+                const twoWeeksAgo = new Date();
+                twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+                
+                if (orbit.deniedAt > twoWeeksAgo) {
+                    return res.status(403).json({ 
+                        message: 'Cannot send messages. Orbit request was denied recently.' 
+                    });
+                } else {
+                    // Reset denied orbit after 2 weeks
+                    orbit.status = 'pending';
+                    orbit.messageCount = 0;
+                    orbit.deniedAt = null;
+                }
+            }
+            
+            // Check message limit for pending orbits
+            if (orbit.status === 'pending' && orbit.messageCount >= 5) {
+                return res.status(403).json({ 
+                    message: 'Message limit reached. Please wait for the recipient to accept your orbit request.' 
+                });
+            }
+            
+            // Increment message count for pending orbits
+            if (orbit.status === 'pending') {
+                orbit.messageCount += 1;
+                await orbit.save();
+            }
+        }
+        
         const { iv, encryptedData, authTag } = encryptMessage(content);
         const message = new Message({
             sender: req.user.id,
@@ -32,14 +85,15 @@ exports.sendMessage = async (req, res) => {
             { path: 'sender', select: 'eclipseId username displayName avatar' },
             { path: 'receiver', select: 'eclipseId username displayName avatar' }
         ]);
+        
         const io = req.app.get('io');
         if (io) {
-            
             const roomId = generateRoomId(req.user.eclipseId, recipientEclipseId);
-            console.log(`🎯 Sender eclipseId: ${req.user.eclipseId}`);
-            console.log(`🎯 Recipient eclipseId: ${recipientEclipseId}`);
-            console.log(`🎯 Generated room ID: ${roomId}`);
-            console.log(`🎯 Personal room: user_${recipientEclipseId}`);
+            console.log(`Sender eclipseId: ${req.user.eclipseId}`);
+            console.log(`Recipient eclipseId: ${recipientEclipseId}`);
+            console.log(`Generated room ID: ${roomId}`);
+            console.log(`Personal room: user_${recipientEclipseId}`);
+
             const messageData = {
                 id: savedMessage._id,
                 content: decryptMessage(encryptedData, iv, authTag), 
@@ -48,10 +102,12 @@ exports.sendMessage = async (req, res) => {
                 timestamp: savedMessage.createdAt,
                 expiresAt: savedMessage.expiresAt
             };
+            
             io.to(roomId).emit('receive_message', messageData);
             io.to(`user_${recipientEclipseId}`).emit('receive_message', messageData);
-            console.log(`📤 Message emitted to both rooms: ${roomId} and user_${recipientEclipseId}`);
+            console.log(`Message emitted to both rooms: ${roomId} and user_${recipientEclipseId}`);
         }
+        
         res.status(201).json({ 
             message: 'Message sent securely',
             messageId: savedMessage._id,
@@ -62,6 +118,116 @@ exports.sendMessage = async (req, res) => {
         console.error('Error sending message:', error);
         res.status(500).json({ 
             message: 'Failed to send message',
+            error: process.env.NODE_ENV === 'development' ? error.message : {}
+        });
+    }
+};
+
+// Accept an orbit request
+exports.acceptOrbit = async (req, res) => {
+    try {
+        const { senderEclipseId } = req.body;
+        
+        if (!senderEclipseId) {
+            return res.status(400).json({ 
+                message: 'Sender Eclipse ID is required' 
+            });
+        }
+        
+        const sender = await findUserByEclipseId(senderEclipseId);
+        if (!sender) {
+            return res.status(404).json({ 
+                message: 'Sender not found' 
+            });
+        }
+        
+        // Find the pending orbit request
+        const orbit = await Orbit.findOne({
+            senderId: sender._id,
+            receiverId: req.user.id,
+            status: 'pending'
+        });
+        
+        if (!orbit) {
+            return res.status(404).json({ 
+                message: 'No pending orbit request found' 
+            });
+        }
+        
+        // Update orbit status to accepted
+        orbit.status = 'accepted';
+        await orbit.save();
+        
+        // Add each user to the other's friends list if not already friends
+        if (!req.user.friends.includes(sender._id)) {
+            req.user.friends.push(sender._id);
+            await req.user.save();
+        }
+        
+        if (!sender.friends.includes(req.user.id)) {
+            sender.friends.push(req.user.id);
+            await sender.save();
+        }
+        
+        res.json({ 
+            message: 'Orbit request accepted',
+            orbit: orbit
+        });
+        
+    } catch (error) {
+        console.error('Error accepting orbit:', error);
+        res.status(500).json({ 
+            message: 'Failed to accept orbit request',
+            error: process.env.NODE_ENV === 'development' ? error.message : {}
+        });
+    }
+};
+
+// Deny an orbit request
+exports.denyOrbit = async (req, res) => {
+    try {
+        const { senderEclipseId } = req.body;
+        
+        if (!senderEclipseId) {
+            return res.status(400).json({ 
+                message: 'Sender Eclipse ID is required' 
+            });
+        }
+        
+        const sender = await findUserByEclipseId(senderEclipseId);
+        if (!sender) {
+            return res.status(404).json({ 
+                message: 'Sender not found' 
+            });
+        }
+        
+        // Find the pending orbit request
+        const orbit = await Orbit.findOne({
+            senderId: sender._id,
+            receiverId: req.user.id,
+            status: 'pending'
+        });
+        
+        if (!orbit) {
+            return res.status(404).json({ 
+                message: 'No pending orbit request found' 
+            });
+        }
+        
+        // Update orbit status to denied and set deniedAt timestamp
+        orbit.status = 'denied';
+        orbit.deniedAt = new Date();
+        await orbit.save();
+        
+        res.json({ 
+            message: 'Orbit request denied',
+            orbit: orbit
+        });
+        
+    } catch (error) {
+        console.error('Error denying orbit:', error);
+        res.status(500).json({ 
+            message: 'Failed to deny orbit request',
             error: process.env.NODE_ENV === 'development' ? error.message : {}
         });
     }

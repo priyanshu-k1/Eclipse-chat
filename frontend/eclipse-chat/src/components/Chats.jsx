@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import './chats.css';
+import applogo from '../assets/Eclipse-Logo.png';
+import noContactsIllustration from '../assets/space-illustration.svg'
 
 const Chats = () => {
   const navigate = useNavigate();
@@ -48,17 +50,50 @@ const Chats = () => {
 
   if (loading) {
     return (
-      <div className="chats-container">
-        <p className="loading-text">Checking authentication...</p>
-        <p className="loading-text2">Please wait </p>
+      <div className="chats-container2">
+        <p className="loading-text">Initializing your secure channel...</p>
+        <p className="loading-text2">Thanks for your patience!</p>
       </div>
     );
   }
 
   return (
     <div className="chats-container">
-      <h1>Welcome <span className="user-name">{user?.displayName || "User"}</span></h1>
-      <p>You are authenticated and can access your private chats.</p>
+      <div className="innerContainers contactsArea">
+        {/* Hero Section */}
+        <div className="heroSection">
+          <div className="appBrand">
+            <img src={applogo} alt="Eclipse Logo" />
+            <h2>Eclipse Chat</h2>
+          </div>
+          <div className="userAvatar">
+            <img src={user?.avatar} alt="User Avatar" />
+          </div>
+        </div>
+        {/* Chats + Search */}
+        <div className="chats">
+          <div className="searchArea">
+            <h3>Chats</h3>
+            <input type="text" placeholder="Search chats..." className="searchContacts"/>
+          </div>
+          <div className="contacts emptyState">
+              <img src={noContactsIllustration} alt="No Contacts Illustration" className="empty-illustration"/>
+              <p className="empty-text">No one to orbit yet...</p>
+              <span className="empty-subtext">Start a new chat and grow your galaxy</span>
+          </div>
+        </div>
+      </div>
+      <div className="messageArea">
+        <div className="welcome-container">
+          <div className="welcome-header">
+            <img src={applogo} alt="Eclipse Logo" />
+            <h1 className="welcome-title">
+              Welcome back, <span className="user-name">{user?.displayName || "User"}</span>
+            </h1>
+            <p className="welcome-subtitle">Your private space awaits</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

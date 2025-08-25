@@ -20,10 +20,11 @@ exports.authenticate = async (req, res, next) => {
     }
 
     req.user = user;
+    req.avatar = user.avatar;
     req.token = token;
     next();
   } catch (error) {
     console.error('Authentication error:', error);
-    res.status(401).json({ message: 'Please authenticate' });
+    res.status(401).json({ message: 'Please authenticate.' });
   }
 };

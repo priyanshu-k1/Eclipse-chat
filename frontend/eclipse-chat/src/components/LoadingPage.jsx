@@ -5,7 +5,17 @@ import "./LoadingPage.css";
 
 const LoadingPage = () => {
   const navigate = useNavigate();
-  const [loadingMessage, setLoadingMessage] = useState("Initializing Eclipse Chat...");
+  const loadingMessages = [
+    "Initializing Eclipse Chat...",
+    "Establishing a secure orbit...",
+    "Connecting to the constellation...",
+    "Navigating the cosmos to your chats...",
+    "Preparing for launch...",
+    "Launching Eclipse Chat...",
+    "Loading your universe...",
+    "Finding your place in the galaxy..."
+  ];
+  const [loadingMessage, setLoadingMessage] = useState(loadingMessages[Math.floor(Math.random() * loadingMessages.length)]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -14,6 +24,7 @@ const LoadingPage = () => {
       if (!token) {
         setTimeout(() => {
           navigate("/LandingPage");
+          console.log("No token found, would navigate to LandingPage");
         }, 1000);
         return;
       }

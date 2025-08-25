@@ -2,7 +2,8 @@ const User = require('../models/userModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const displayNameGeneratoe = require('../micro-service/DisplayNameGenerator');
+const displayNameGenerator = require('../micro-service/DisplayNameGenerator');
+const AvatarGenerator= require('../micro-service/AvatarGenerator').default;
 
 // Utility functions
 const generateToken = (user) => {
@@ -123,7 +124,8 @@ exports.signup = async (req, res) => {
       username: username.toLowerCase(), 
       email,
       password: hashedPassword,
-      displayName: displayNameGeneratoe(), 
+      displayName: displayNameGenerator(),
+      avatar:AvatarGenerator(username)
     });
 
     await newUser.save();
@@ -171,8 +173,6 @@ exports.signin = async (req, res) => {
         error: getHumanReadableError('Invalid credentials')
       });
     }
-
-    // Generate token and store it in user's tokens array
     const token = generateToken(user);
     user.tokens.push({ token });
     await user.save();

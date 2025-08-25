@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="320" height="220" viewBox="0 0 320 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Glows -->
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="strongGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Gradients -->
+    <linearGradient id="violetCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6C63FF"/>
+      <stop offset="100%" stop-color="#00C2FF"/>
+    </linearGradient>
+    <radialGradient id="planetFill" cx="45%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#6C63FF" stop-opacity="0.95"/>
+      <stop offset="60%" stop-color="#6C63FF" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#0B0C10" stop-opacity="0.0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Stars -->
+  <g filter="url(#softGlow)">
+    <circle cx="24"  cy="28"  r="1.2" fill="#B0B0B0" opacity="0.9"/>
+    <circle cx="78"  cy="18"  r="1.1" fill="#B0B0B0" opacity="0.8"/>
+    <circle cx="300" cy="36"  r="1.3" fill="#B0B0B0" opacity="0.9"/>
+    <circle cx="270" cy="70"  r="1.0" fill="#B0B0B0" opacity="0.7"/>
+    <circle cx="46"  cy="94"  r="1.0" fill="#B0B0B0" opacity="0.7"/>
+    <circle cx="112" cy="12"  r="1.2" fill="#B0B0B0" opacity="0.8"/>
+    <circle cx="200" cy="20"  r="1.1" fill="#B0B0B0" opacity="0.9"/>
+    <circle cx="150" cy="102" r="1.0" fill="#B0B0B0" opacity="0.8"/>
+    <circle cx="306" cy="108" r="1.1" fill="#B0B0B0" opacity="0.8"/>
+  </g>
+
+  <!-- Orbit Paths -->
+  <g opacity="0.8">
+    <ellipse cx="160" cy="120" rx="110" ry="40" stroke="url(#violetCyan)" stroke-width="1.5" fill="none" filter="url(#softGlow)"/>
+    <ellipse cx="160" cy="120" rx="80"  ry="28" stroke="url(#violetCyan)" stroke-width="1" fill="none" opacity="0.7"/>
+  </g>
+
+  <!-- Planet (Eclipse) -->
+  <g transform="translate(0,4)">
+    <circle cx="160" cy="120" r="34" fill="url(#planetFill)"/>
+    <!-- Dark silhouette to hint at eclipse -->
+    <circle cx="172" cy="110" r="30" fill="#0B0C10"/>
+    <!-- Rim glow -->
+    <circle cx="160" cy="120" r="34" fill="none" stroke="url(#violetCyan)" stroke-width="2" filter="url(#strongGlow)" opacity="0.9"/>
+  </g>
+
+  <!-- Ring -->
+  <g transform="translate(0,4)" filter="url(#softGlow)">
+    <ellipse cx="160" cy="120" rx="60" ry="18" fill="none" stroke="url(#violetCyan)" stroke-width="3" opacity="0.9"/>
+  </g>
+
+  <!-- Tiny Satellite (accent) -->
+  <g transform="translate(0,0)" filter="url(#softGlow)">
+    <circle cx="252" cy="98" r="4" fill="#FF6B35" opacity="0.95"/>
+    <rect x="247" y="94" width="10" height="2" rx="1" fill="#FF6B35" opacity="0.9"/>
+    <rect x="248" y="100" width="8" height="2" rx="1" fill="#FF6B35" opacity="0.9"/>
+  </g>
+</svg>

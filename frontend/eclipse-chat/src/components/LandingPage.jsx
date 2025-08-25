@@ -1,21 +1,112 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 import applogo from '../assets/Eclipse-Logo.png';
 import landingpage from '../assets/landingpage.png';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [showToast, setShowToast] = useState(false);
+  const [countdown, setCountdown] = useState(5);
+  const intervalRef = useRef(null);
+
+  const startCountdown = useCallback(() => {
+    // Clear any existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    
+    intervalRef.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(intervalRef.current);
+          navigate("/chats");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [navigate]);
+
+  const handleToastClose = () => {
+    setShowToast(false);
+    setCountdown(5); // Reset countdown
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
 
   const handleGetStarted = () => {
     navigate('/signup');
   };
 
   const handleLogin = () => {
-   navigate('/login');
+    navigate('/login');
   };
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        return;
+      }
+
+      try {
+        const res = await fetch("http://localhost:5001/api/auth/verify", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        });
+
+        if (res.ok) {
+          setShowToast(true);
+          setCountdown(5); // Reset countdown to 5
+          startCountdown();
+        } else {
+          localStorage.removeItem("token");
+        }
+      } catch (err) {
+        console.error("Auth check error:", err);
+        localStorage.removeItem("token");
+      }
+    };
+
+    checkAuth();
+  }, [startCountdown]);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className='maindiv'>
+      {showToast && (
+        <div className="toast-notification">
+          <div className="toast-content">
+            <span className="toast-message">You're already logged in</span>
+            <span className="toast-countdown">Redirecting in {countdown}s</span>
+          </div>
+          <button 
+            className="toast-close"
+            onClick={handleToastClose}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M13 1L1 13M1 1L13 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
+      )}
+      
       <nav className="navbar">
         <div className="navLeft">
           <img src={applogo} alt="Eclipse Chat" className="logo-animated" />
@@ -25,7 +116,6 @@ const LandingPage = () => {
           <button className="loginButton" onClick={handleLogin}>Login</button>
         </div>
       </nav>
-
 
       <div className='contentWrapper'>
         <div className='textHolder'>
