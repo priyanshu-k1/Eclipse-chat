@@ -81,6 +81,10 @@ const Chats = () => {
               <p className="empty-text">No one to orbit yet...</p>
               <span className="empty-subtext">Start a new chat and grow your galaxy</span>
           </div>
+          <button className="logout-button" onClick={() => {
+            localStorage.removeItem("token");
+            navigate("/login");
+          }}>logout</button>
         </div>
       </div>
       <div className="messageArea">

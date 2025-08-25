@@ -85,6 +85,7 @@ function SignUp() {
       email: formData.email.trim().toLowerCase(),
       password: formData.password
     };
+    localStorage.removeItem("token");
     console.log('Sending signup data:', signupData); 
     try {
       const res = await fetch("http://localhost:5001/api/auth/signup", {
