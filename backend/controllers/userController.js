@@ -73,7 +73,7 @@ const updateProfilePic = async (req, res) => {
         const { avatar } = req.body;
         const avatarValue = avatar || '';
         if (avatar && avatar.trim() !== '') {
-            const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+            const urlPattern = /^(https?:\/\/)[^\s]+$/;
             const isValidUrl = urlPattern.test(avatar.trim());
             const isBase64 = avatar.startsWith('data:image/');
             if (!isValidUrl && !isBase64) {

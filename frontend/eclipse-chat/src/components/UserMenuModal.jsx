@@ -1,3 +1,4 @@
+// UserMenuModal.jsx
 import React, { useRef, useEffect } from 'react';
 import './UserMenuModal.css';
 
@@ -38,14 +39,19 @@ const UserMenuModal = ({ isOpen, onClose, user, onLogout }) => {
       title: 'Edit Profile',
       description: 'Update your information',
       icon: 'person_4', 
-      action: () => console.log('Edit Profile clicked'),
+      action: () => {
+        onClose();
+        if (window.openEditProfile) {
+          window.openEditProfile();
+        }
+      },
       type: 'normal'
     },
     {
       id: 'switch',
       title: 'Switch User',
       description: 'Change active account',
-      icon: 'swap_horiz',
+      icon: 'swap_horiz', 
       action: () => console.log('Switch User clicked'),
       type: 'normal'
     },
@@ -82,11 +88,11 @@ const UserMenuModal = ({ isOpen, onClose, user, onLogout }) => {
             </div>
             <div className="user-details">
               <h3 className="user-display-name">{user?.displayName || "User"}</h3>
-              <p className="user-email">{user?.email || "user@example.com"}</p>
+              <p className="modal-user-name">{user?.username || "Celestials"}</p>
             </div>
           </div>
           <button className="close-button" onClick={onClose}>
-           <span className="material-symbols-outlined">close</span>
+            <span className='material-symbols-outlined'>close</span> 
           </button>
         </div>
 
@@ -100,14 +106,14 @@ const UserMenuModal = ({ isOpen, onClose, user, onLogout }) => {
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="menu-item-icon">
-                <span className="material-symbols-outlined">{item.icon}</span>
+                <span className='material-symbols-outlined'>{item.icon}</span>
               </div>
               <div className="menu-item-text">
                 <span className="menu-item-title">{item.title}</span>
                 <span className="menu-item-description">{item.description}</span>
               </div>
               <div className="menu-item-arrow">
-                <span className="material-symbols-outlined">chevron_right</span>
+                <span className='material-symbols-outlined'>chevron_right</span> 
               </div>
             </button>
           ))}
@@ -116,7 +122,7 @@ const UserMenuModal = ({ isOpen, onClose, user, onLogout }) => {
         {/* Footer */}
         <div className="user-menu-footer">
           <div className="encryption-status">
-            <div className="status-icon material-symbols-outlined">security</div>
+            <div className="status-icon material-symbols-outlined">lock</div>
             <span>End-to-end encrypted</span>
           </div>
         </div>
