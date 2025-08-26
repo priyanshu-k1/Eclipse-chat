@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 
 import './chats.css';
 import applogo from '../assets/Eclipse-Logo.png';
-import noContactsIllustration from '../assets/space-illustration.svg'
+import noContactsIllustration from '../assets/space-illustration.svg';
+import UserMenuModal from './UserMenuModal'; 
 
 const Chats = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false); 
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -48,6 +50,18 @@ const Chats = () => {
     checkAuth();
   }, [navigate]);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+  const handleMenuToggle = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleCloseMenu = () => {
+    setIsMenuOpen(false);
+  };
+
   if (loading) {
     return (
       <div className="chats-container2">
@@ -58,47 +72,51 @@ const Chats = () => {
   }
 
   return (
-    <div className="chats-container">
-      <div className="innerContainers contactsArea">
-        {/* Hero Section */}
-        <div className="heroSection">
-          <div className="appBrand">
-            <img src={applogo} alt="Eclipse Logo" />
-            <h2>Eclipse Chat</h2>
+    <>
+      <div className="chats-container">
+        <div className="innerContainers contactsArea">
+          {/* Hero Section */}
+          <div className="heroSection">
+            <div className="appBrand">
+              <img src={applogo} alt="Eclipse Logo" />
+              <h2>Eclipse Chat</h2>
+            </div>
+            <div className="userAvatar" onClick={handleMenuToggle}>
+              <img src={user?.avatar} alt="User Avatar" />
+            </div>
           </div>
-          <div className="userAvatar">
-            <img src={user?.avatar} alt="User Avatar" />
+          {/* Chats + Search */}
+          <div className="chats">
+            <div className="searchArea">
+              <h3>Chats</h3>
+              <input type="text" placeholder="Search chats..." className="searchContacts"/>
+            </div>
+            <div className="contacts emptyState">
+                <img src={noContactsIllustration} alt="No Contacts Illustration" className="empty-illustration"/>
+                <p className="empty-text">No one to orbit yet...</p>
+                <span className="empty-subtext">Start a new chat and grow your galaxy</span>
+            </div>
           </div>
         </div>
-        {/* Chats + Search */}
-        <div className="chats">
-          <div className="searchArea">
-            <h3>Chats</h3>
-            <input type="text" placeholder="Search chats..." className="searchContacts"/>
-          </div>
-          <div className="contacts emptyState">
-              <img src={noContactsIllustration} alt="No Contacts Illustration" className="empty-illustration"/>
-              <p className="empty-text">No one to orbit yet...</p>
-              <span className="empty-subtext">Start a new chat and grow your galaxy</span>
-          </div>
-          <button className="logout-button" onClick={() => {
-            localStorage.removeItem("token");
-            navigate("/login");
-          }}>logout</button>
-        </div>
-      </div>
-      <div className="messageArea">
-        <div className="welcome-container">
-          <div className="welcome-header">
-            <img src={applogo} alt="Eclipse Logo" />
-            <h1 className="welcome-title">
-              Welcome back, <span className="user-name">{user?.displayName || "User"}</span>
-            </h1>
-            <p className="welcome-subtitle">Your private space awaits</p>
+        <div className="messageArea">
+          <div className="welcome-container">
+            <div className="welcome-header">
+              <img src={applogo} alt="Eclipse Logo" />
+              <h1 className="welcome-title">
+                Welcome back, <span className="user-name">{user?.displayName || "User"}</span>
+              </h1>
+              <p className="welcome-subtitle">Your private space awaits</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <UserMenuModal 
+        isOpen={isMenuOpen}
+        onClose={handleCloseMenu}
+        user={user}
+        onLogout={handleLogout}
+      />
+    </>
   );
 };
 
