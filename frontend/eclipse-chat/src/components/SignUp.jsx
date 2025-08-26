@@ -85,7 +85,6 @@ function SignUp() {
       email: formData.email.trim().toLowerCase(),
       password: formData.password
     };
-    localStorage.removeItem("token");
     console.log('Sending signup data:', signupData); 
     try {
       const res = await fetch("http://localhost:5001/api/auth/signup", {
@@ -106,7 +105,6 @@ function SignUp() {
         console.log('Non-JSON response:', textResponse);
         throw new Error(`Server returned non-JSON response: ${textResponse}`);
       }
-      console.log('Response data:', data); 
       if (res.ok) {
         showModal('Success!', data.message || 'Account created successfully!', 'success');
         setFormData({
@@ -115,9 +113,10 @@ function SignUp() {
           password: "",
           confirmPassword: ""
         });
-         setTimeout(() => {
+        localStorage.setItem('token', data.token);
+        setTimeout(() => {
           navigate("/chats");
-          }, 1500);
+        }, 1500);
       } else {
         let errorMessage = 'Signup failed';
         if (data.error) {
@@ -136,9 +135,7 @@ function SignUp() {
       }
     } catch (error) {
       console.error("Signup error:", error);
-      
       let errorMessage = 'Network error, please try again later.';
-      
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         errorMessage = 'Cannot connect to server. Make sure the server is running on http://localhost:5001';
       } else if (error.message.includes('JSON')) {
@@ -217,7 +214,7 @@ function SignUp() {
           <p>Already have an account? <Link to="/login">Log in</Link></p>
         </form>
       </div>
-      <a href="/">Back to Home</a>
+      <a href="/LandingPage">Back to Home</a>
 
       {/* Modal Component */}
       <Modal
