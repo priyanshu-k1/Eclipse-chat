@@ -25,6 +25,8 @@ const orbitSchema = new mongoose.Schema({
         default: null
     }
 }, { timestamps: true });
-orbitSchema.index({ senderId: 1, receiverId: 1 }, { unique: true });
-
+orbitSchema.index(
+    { senderId: 1, receiverId: 1 },
+    { unique: true, partialFilterExpression: { status: { $in: ['pending', 'accepted'] } } }
+);
 module.exports = mongoose.model('Orbit', orbitSchema);

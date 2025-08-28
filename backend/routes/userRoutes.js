@@ -5,7 +5,9 @@ const {
     updatePassword, 
     updateProfilePic, 
     deleteUser,
-    getUserProfile 
+    getUserProfile,
+    searchUsers,
+    getPendingRequests
 } = require('../controllers/userController');
 
 
@@ -17,5 +19,8 @@ router.put('/update-displayName', authenticate, updateDisplayName);
 router.put('/update-password', authenticate, updatePassword);
 router.put('/update-profilePic', authenticate, updateProfilePic);
 router.delete('/delete', authenticate, deleteUser);
+router.get('/search', authenticate, searchUsers);
+router.get('/pending', authenticate, getPendingRequests);
+
 
 module.exports = router;

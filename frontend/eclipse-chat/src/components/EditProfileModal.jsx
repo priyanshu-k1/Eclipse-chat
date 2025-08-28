@@ -216,8 +216,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
             confirmPassword: ''
           }));
         }
-        
-        // Close modal after 2 seconds for successful updates
+
         setTimeout(() => {
           onClose();
         }, 2000);
@@ -242,339 +241,343 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
   ];
 
   return (
-    <div className="edit-profile-overlay">
-      <div className="edit-profile-modal" ref={modalRef}>
-        {/* Header */}
-        <div className="edit-profile-header">
-          <div className="header-content">
-            <h2>Edit Profile</h2>
-            <p>Customize your Eclipse identity</p>
-          </div>
-          <button className="close-btn" onClick={onClose}>
-            <span>✕</span>
-          </button>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="tab-navigation">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <span className="tab-icon material-symbols-outlined">{tab.icon}</span>
-              <span className="tab-label">{tab.label}</span>
+    <>
+      <div className="edit-profile-overlay">
+        <div className="edit-profile-modal" ref={modalRef}>
+          {/* Header */}
+          <div className="edit-profile-header">
+            <div className="header-content">
+              <h2>Edit Profile</h2>
+              <p>Customize your Eclipse identity</p>
+            </div>
+            <button className="close-btn" onClick={onClose}>
+              <span>✕</span>
             </button>
-          ))}
-        </div>
+          </div>
 
-        {/* Success Message */}
-        {successMessage && (
-          <div className="success-message">
+          {/* Tab Navigation */}
+          <div className="tab-navigation">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <span className="tab-icon material-symbols-outlined">{tab.icon}</span>
+                <span className="tab-label">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Content */}
+          <form onSubmit={handleSubmit} className="edit-profile-content">
+            {activeTab === 'general' && (
+              <div className="tab-content">
+                <div className="form-section">
+                  <h3>Personal Information</h3>
+                  <div className="form-group">
+                    <label htmlFor="displayName">Display Name</label>
+                    <div className="input-container">
+                      <input
+                        type="text"
+                        id="displayName"
+                        name="displayName"
+                        value={formData.displayName}
+                        onChange={handleInputChange}
+                        placeholder="Enter your display name"
+                        className={errors.displayName ? 'error' : ''}
+                      />
+                      <div className="input-icon">
+                        <span className='material-symbols-outlined'>person_4</span>
+                      </div>
+                    </div>
+                    {errors.displayName && (
+                      <span className="error-message">{errors.displayName}</span>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Email Address</label>
+                    <div className="input-container disabled">
+                      <input
+                        type="email"
+                        value={user?.email || ''}
+                        disabled
+                        placeholder="Email cannot be changed"
+                      />
+                      <div className="input-icon">
+                        <span className='material-symbols-outlined'>email</span>
+                      </div>
+                    </div>
+                    <span className="input-note">Email address cannot be modified</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'security' && (
+              <div className="tab-content">
+                <div className="form-section">
+                  <h3>Password Settings</h3>
+                  <div className="security-warning">
+                    <div className="warning-icon material-symbols-outlined">warning</div>
+                    <div>
+                      <p>Changing your password will log you out of all devices.</p>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="currentPassword">Current Password</label>
+                    <div className="input-container">
+                      <input
+                        type={showPasswords.current ? 'text' : 'password'}
+                        id="currentPassword"
+                        name="currentPassword"
+                        value={formData.currentPassword}
+                        onChange={handleInputChange}
+                        placeholder="Enter current password"
+                        className={errors.currentPassword ? 'error' : ''}
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle material-symbols-outlined"
+                        onClick={() => togglePasswordVisibility('current')}
+                      >
+                        {showPasswords.current ? 'visibility' : 'visibility_off'}
+                      </button>
+                    </div>
+                    {errors.currentPassword && (
+                      <span className="error-message">{errors.currentPassword}</span>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="newPassword">New Password</label>
+                    <div className="input-container">
+                      <input
+                        type={showPasswords.new ? 'text' : 'password'}
+                        id="newPassword"
+                        name="newPassword"
+                        value={formData.newPassword}
+                        onChange={handleInputChange}
+                        placeholder="Enter new password"
+                        className={errors.newPassword ? 'error' : ''}
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle material-symbols-outlined"
+                        onClick={() => togglePasswordVisibility('new')}
+                      >
+                        {showPasswords.new ? 'visibility' : 'visibility_off'}
+                      </button>
+                    </div>
+                    {errors.newPassword && (
+                      <span className="error-message">{errors.newPassword}</span>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="confirmPassword">Confirm New Password</label>
+                    <div className="input-container">
+                      <input
+                        type={showPasswords.confirm ? 'text' : 'password'}
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        placeholder="Confirm new password"
+                        className={errors.confirmPassword ? 'error' : ''}
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle material-symbols-outlined"
+                        onClick={() => togglePasswordVisibility('confirm')}
+                      >
+                        {showPasswords.confirm ? 'visibility' : 'visibility_off'}
+                      </button>
+                    </div>
+                    {errors.confirmPassword && (
+                      <span className="error-message">{errors.confirmPassword}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {activeTab === 'avatar' && (
+              <div className="tab-content">
+                <div className="form-section">
+                  <h3>Customize Your Avatar</h3>
+
+                  {/* Avatar Preview */}
+                  <div className="avatar-preview-section">
+                    <label>Preview</label>
+                    <div className="avatar-preview-container">
+                      <img
+                        src={generateAvatarPreview()}
+                        alt="Avatar preview"
+                        className="avatar-preview"
+                        key={`${avatarSettings.character}-${avatarSettings.backgroundColor}-${avatarSettings.foregroundColor}-${avatarSettings.useGradient}-${avatarSettings.gradientColor}-${avatarSettings.font}`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="avatarCharacter">Character</label>
+                    <div className="input-container">
+                      <input
+                        type="text"
+                        id="avatarCharacter"
+                        name="character"
+                        value={avatarSettings.character}
+                        onChange={handleCharacterChange}
+                        placeholder="Enter a character"
+                        maxLength="2"
+                      />
+                      <div className="input-icon">
+                        <span className='material-symbols-outlined'>text_fields</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="avatarFont">Font Family</label>
+                    <div className="input-container">
+                      <select
+                        id="avatarFont"
+                        name="font"
+                        value={avatarSettings.font}
+                        onChange={handleAvatarSettingChange}
+                      >
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Lato">Lato</option>
+                        <option value="Poppins">Poppins</option>
+                      </select>
+                      <div className="input-icon">
+                        <span className='material-symbols-outlined'>font_download</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="color-pickers-group">
+                    <div className="form-group">
+                      <label htmlFor="backgroundColor">Background Color</label>
+                      <div className="color-picker-container">
+                        <input
+                          type="color"
+                          id="backgroundColor"
+                          name="backgroundColor"
+                          value={avatarSettings.backgroundColor}
+                          onChange={handleAvatarSettingChange}
+                        />
+                        <input
+                          type="text"
+                          value={avatarSettings.backgroundColor}
+                          onChange={(e) => handleHexColorChange('backgroundColor', e.target.value)}
+                          placeholder="#000000"
+                          className="color-hex-input"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="foregroundColor">Text Color</label>
+                      <div className="color-picker-container">
+                        <input
+                          type="color"
+                          id="foregroundColor"
+                          name="foregroundColor"
+                          value={avatarSettings.foregroundColor}
+                          onChange={handleAvatarSettingChange}
+                        />
+                        <input
+                          type="text"
+                          value={avatarSettings.foregroundColor}
+                          onChange={(e) => handleHexColorChange('foregroundColor', e.target.value)}
+                          placeholder="#FFFFFF"
+                          className="color-hex-input"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        name="useGradient"
+                        checked={avatarSettings.useGradient}
+                        onChange={handleAvatarSettingChange}
+                      />
+                      Use Gradient Background
+                    </label>
+                  </div>
+                  {avatarSettings.useGradient && (
+                    <div className="form-group">
+                      <label htmlFor="gradientColor">Gradient Color</label>
+                      <div className="color-picker-container">
+                        <input
+                          type="color"
+                          id="gradientColor"
+                          name="gradientColor"
+                          value={avatarSettings.gradientColor}
+                          onChange={handleAvatarSettingChange}
+                        />
+                        <input
+                          type="text"
+                          value={avatarSettings.gradientColor}
+                          onChange={(e) => handleHexColorChange('gradientColor', e.target.value)}
+                          placeholder="#000000"
+                          className="color-hex-input"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* General Error */}
+            {errors.general && (
+              <div className="general-error">
+                <span className="material-symbols-outlined">error</span>
+                <span>{errors.general}</span>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="edit-profile-footer">
+              <button type="button" className="cancel-btn" onClick={onClose}>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="save-btn"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="loading-spinner"></span>
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Success Message - Positioned at the right side of screen */}
+      {successMessage && (
+        <div className="success-toast">
+          <div className="success-toast-content">
             <span className="material-symbols-outlined">check_circle</span>
             <span>{successMessage}</span>
           </div>
-        )}
-
-        {/* Content */}
-        <form onSubmit={handleSubmit} className="edit-profile-content">
-          {activeTab === 'general' && (
-            <div className="tab-content">
-              <div className="form-section">
-                <h3>Personal Information</h3>
-                <div className="form-group">
-                  <label htmlFor="displayName">Display Name</label>
-                  <div className="input-container">
-                    <input
-                      type="text"
-                      id="displayName"
-                      name="displayName"
-                      value={formData.displayName}
-                      onChange={handleInputChange}
-                      placeholder="Enter your display name"
-                      className={errors.displayName ? 'error' : ''}
-                    />
-                    <div className="input-icon">
-                      <span className='material-symbols-outlined'>person_4</span>
-                    </div>
-                  </div>
-                  {errors.displayName && (
-                    <span className="error-message">{errors.displayName}</span>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label>Email Address</label>
-                  <div className="input-container disabled">
-                    <input
-                      type="email"
-                      value={user?.email || ''}
-                      disabled
-                      placeholder="Email cannot be changed"
-                    />
-                    <div className="input-icon">
-                      <span className='material-symbols-outlined'>email</span>
-                    </div>
-                  </div>
-                  <span className="input-note">Email address cannot be modified</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'security' && (
-            <div className="tab-content">
-              <div className="form-section">
-                <h3>Password Settings</h3>
-                <div className="security-warning">
-                  <div className="warning-icon material-symbols-outlined">warning</div>
-                  <div>
-                    <p>Changing your password will log you out of all devices.</p>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="currentPassword">Current Password</label>
-                  <div className="input-container">
-                    <input
-                      type={showPasswords.current ? 'text' : 'password'}
-                      id="currentPassword"
-                      name="currentPassword"
-                      value={formData.currentPassword}
-                      onChange={handleInputChange}
-                      placeholder="Enter current password"
-                      className={errors.currentPassword ? 'error' : ''}
-                    />
-                    <button
-                      type="button"
-                      className="password-toggle material-symbols-outlined"
-                      onClick={() => togglePasswordVisibility('current')}
-                    >
-                      {showPasswords.current ? 'visibility' : 'visibility_off'}
-                    </button>
-                  </div>
-                  {errors.currentPassword && (
-                    <span className="error-message">{errors.currentPassword}</span>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="newPassword">New Password</label>
-                  <div className="input-container">
-                    <input
-                      type={showPasswords.new ? 'text' : 'password'}
-                      id="newPassword"
-                      name="newPassword"
-                      value={formData.newPassword}
-                      onChange={handleInputChange}
-                      placeholder="Enter new password"
-                      className={errors.newPassword ? 'error' : ''}
-                    />
-                    <button
-                      type="button"
-                      className="password-toggle material-symbols-outlined"
-                      onClick={() => togglePasswordVisibility('new')}
-                    >
-                      {showPasswords.new ? 'visibility' : 'visibility_off'}
-                    </button>
-                  </div>
-                  {errors.newPassword && (
-                    <span className="error-message">{errors.newPassword}</span>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="confirmPassword">Confirm New Password</label>
-                  <div className="input-container">
-                    <input
-                      type={showPasswords.confirm ? 'text' : 'password'}
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      placeholder="Confirm new password"
-                      className={errors.confirmPassword ? 'error' : ''}
-                    />
-                    <button
-                      type="button"
-                      className="password-toggle material-symbols-outlined"
-                      onClick={() => togglePasswordVisibility('confirm')}
-                    >
-                      {showPasswords.confirm ? 'visibility' : 'visibility_off'}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && (
-                    <span className="error-message">{errors.confirmPassword}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === 'avatar' && (
-            <div className="tab-content">
-              <div className="form-section">
-                <h3>Customize Your Avatar</h3>
-
-                {/* Avatar Preview */}
-                <div className="avatar-preview-section">
-                  <label>Preview</label>
-                  <div className="avatar-preview-container">
-                    <img
-                      src={generateAvatarPreview()}
-                      alt="Avatar preview"
-                      className="avatar-preview"
-                      key={`${avatarSettings.character}-${avatarSettings.backgroundColor}-${avatarSettings.foregroundColor}-${avatarSettings.useGradient}-${avatarSettings.gradientColor}-${avatarSettings.font}`}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="avatarCharacter">Character</label>
-                  <div className="input-container">
-                    <input
-                      type="text"
-                      id="avatarCharacter"
-                      name="character"
-                      value={avatarSettings.character}
-                      onChange={handleCharacterChange}
-                      placeholder="Enter a character"
-                      maxLength="2"
-                    />
-                    <div className="input-icon">
-                      <span className='material-symbols-outlined'>text_fields</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="avatarFont">Font Family</label>
-                  <div className="input-container">
-                    <select
-                      id="avatarFont"
-                      name="font"
-                      value={avatarSettings.font}
-                      onChange={handleAvatarSettingChange}
-                    >
-                      <option value="Montserrat">Montserrat</option>
-                      <option value="Roboto">Roboto</option>
-                      <option value="Open Sans">Open Sans</option>
-                      <option value="Lato">Lato</option>
-                      <option value="Poppins">Poppins</option>
-                    </select>
-                    <div className="input-icon">
-                      <span className='material-symbols-outlined'>font_download</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="color-pickers-group">
-                  <div className="form-group">
-                    <label htmlFor="backgroundColor">Background Color</label>
-                    <div className="color-picker-container">
-                      <input
-                        type="color"
-                        id="backgroundColor"
-                        name="backgroundColor"
-                        value={avatarSettings.backgroundColor}
-                        onChange={handleAvatarSettingChange}
-                      />
-                      <input
-                        type="text"
-                        value={avatarSettings.backgroundColor}
-                        onChange={(e) => handleHexColorChange('backgroundColor', e.target.value)}
-                        placeholder="#000000"
-                        className="color-hex-input"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="foregroundColor">Text Color</label>
-                    <div className="color-picker-container">
-                      <input
-                        type="color"
-                        id="foregroundColor"
-                        name="foregroundColor"
-                        value={avatarSettings.foregroundColor}
-                        onChange={handleAvatarSettingChange}
-                      />
-                      <input
-                        type="text"
-                        value={avatarSettings.foregroundColor}
-                        onChange={(e) => handleHexColorChange('foregroundColor', e.target.value)}
-                        placeholder="#FFFFFF"
-                        className="color-hex-input"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="useGradient"
-                      checked={avatarSettings.useGradient}
-                      onChange={handleAvatarSettingChange}
-                    />
-                    Use Gradient Background
-                  </label>
-                </div>
-                {avatarSettings.useGradient && (
-                  <div className="form-group">
-                    <label htmlFor="gradientColor">Gradient Color</label>
-                    <div className="color-picker-container">
-                      <input
-                        type="color"
-                        id="gradientColor"
-                        name="gradientColor"
-                        value={avatarSettings.gradientColor}
-                        onChange={handleAvatarSettingChange}
-                      />
-                      <input
-                        type="text"
-                        value={avatarSettings.gradientColor}
-                        onChange={(e) => handleHexColorChange('gradientColor', e.target.value)}
-                        placeholder="#000000"
-                        className="color-hex-input"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* General Error */}
-          {errors.general && (
-            <div className="general-error">
-              <span className="material-symbols-outlined">error</span>
-              <span>{errors.general}</span>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="edit-profile-footer">
-            <button type="button" className="cancel-btn" onClick={onClose}>
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="save-btn"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <span className="loading-spinner"></span>
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 };
 

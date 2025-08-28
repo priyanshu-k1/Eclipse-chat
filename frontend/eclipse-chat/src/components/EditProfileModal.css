@@ -297,6 +297,10 @@
   padding: 1rem;
   margin-bottom: 1.5rem;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .general-error span {
@@ -304,6 +308,7 @@
   font-size: 0.9rem;
   font-weight: 500;
 }
+
 /* Avatar Preview */
 .avatar-preview-section {
   margin-bottom: 2rem;
@@ -336,11 +341,23 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   border: 3px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 .avatar-preview:hover {
   transform: scale(1.05);
   border-color: rgba(108, 99, 255, 0.5);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Color Pickers */
@@ -427,148 +444,63 @@
   height: 18px;
   accent-color: #6C63FF;
   cursor: pointer;
-}/* For EditProfileModal.css */
-.success-message {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px;
-  background-color: #10b981;
+}
+
+/* Success Toast - Fixed positioning and visibility */
+.success-toast {
+  position: fixed !important;
+  top: 20px;
+  right: 20px;
+  z-index: 10002 !important;
+  animation: slideInRight 0.3s ease-out forwards;
+  pointer-events: none;
+}
+
+.success-toast-content {
+  background: linear-gradient(135deg, #10b981, #059669);
   color: white;
-  border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-.general-error {
-  display: flex;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+  display: flex !important;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  background-color: #ef4444;
-  color: white;
-  border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-/* For UserMenuModal.css */
-.delete-confirmation {
-  padding: 24px;
-}
-
-.delete-header {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.delete-icon {
-  color: #ef4444;
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.delete-form .form-group {
-  margin-bottom: 16px;
-}
-
-.delete-form label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-.delete-form input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-}
-
-.delete-form input.error {
-  border-color: #ef4444;
-}
-
-.error-message {
-  color: #ef4444;
-  font-size: 14px;
-  margin-top: 4px;
-}
-
-.delete-actions {
-  display: flex;
   gap: 12px;
-  justify-content: flex-end;
-}
-
-.cancel-delete-btn, .confirm-delete-btn {
-  padding: 12px 24px;
-  border-radius: 8px;
+  min-width: 250px;
+  max-width: 400px;
   font-weight: 500;
-  border: none;
-  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  pointer-events: auto;
 }
 
-.cancel-delete-btn {
-  background-color: #6b7280;
-  color: white;
+.success-toast-content .material-symbols-outlined {
+  font-size: 24px;
+  color: #dcfce7;
+  flex-shrink: 0;
 }
 
-.confirm-delete-btn {
-  background-color: #ef4444;
-  color: white;
-}
-
-.loading-spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-right: 8px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Responsive Design for Avatar Section */
-@media (max-width: 768px) {
-  .color-pickers-group {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-  
-  .avatar-preview {
-    width: 100px;
-    height: 100px;
-  }
-  
-  .color-picker-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  
-  .color-hex-input {
-    width: 100%;
-  }
-}
-
-/* Animation for preview updates */
-.avatar-preview {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
+@keyframes slideInRight {
   from {
-    opacity: 0.7;
-    transform: scale(0.95);
+    transform: translateX(100%);
+    opacity: 0;
   }
   to {
+    transform: translateX(0);
     opacity: 1;
-    transform: scale(1);
+  }
+}
+
+.success-toast.slide-out {
+  animation: slideOutRight 0.3s ease-in forwards;
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
   }
 }
 
@@ -631,6 +563,67 @@
   border-top: 2px solid #FFFFFF;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+/* Delete confirmation styles */
+.delete-confirmation {
+  padding: 24px;
+}
+
+.delete-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.delete-icon {
+  color: #ef4444;
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.delete-form .form-group {
+  margin-bottom: 16px;
+}
+
+.delete-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.delete-form input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.delete-form input.error {
+  border-color: #ef4444;
+}
+
+.delete-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.cancel-delete-btn, .confirm-delete-btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+}
+
+.cancel-delete-btn {
+  background-color: #6b7280;
+  color: white;
+}
+
+.confirm-delete-btn {
+  background-color: #ef4444;
+  color: white;
 }
 
 /* Animations */
@@ -718,5 +711,38 @@
   
   .header-content h2 {
     font-size: 1.5rem;
+  }
+  
+  .color-pickers-group {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  
+  .avatar-preview {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .color-picker-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .color-hex-input {
+    width: 100%;
+  }
+  
+  .success-toast {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+  }
+  
+  .success-toast-content {
+    min-width: auto;
+    width: 100%;
+    max-width: none;
   }
 }

@@ -11,7 +11,9 @@ require('dotenv').config();
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes'); 
+const orbitRoutes = require('./routes/orbitRoutes');
 const initializeSocket = require('./socket/socketHandler');
+
 
 // Initialize Express app and HTTP server
 const app = express();
@@ -52,6 +54,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes); 
+app.use('/api/orbits', orbitRoutes);
 app.use('/api/messages', require('./routes/messageRoutes'));
 
 // Error handling middleware

@@ -1,4 +1,3 @@
-// UserMenuModal.jsx
 import React, { useRef, useEffect } from 'react';
 import './UserMenuModal.css';
 
@@ -88,7 +87,8 @@ const UserMenuModal = ({ isOpen, onClose, user, onLogout }) => {
             </div>
             <div className="user-details">
               <h3 className="user-display-name">{user?.displayName || "User"}</h3>
-              <p className="modal-user-name">{user?.username || "Celestials"}</p>
+              <p className="modal-user-name">{user?.username || "Celestials"} | {user?.eclipseId || "Celestial ID"}</p>
+              <p className="modal-user-name"></p>
             </div>
           </div>
           <button className="close-button" onClick={onClose}>

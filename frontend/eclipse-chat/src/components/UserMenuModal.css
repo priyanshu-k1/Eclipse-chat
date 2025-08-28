@@ -317,6 +317,83 @@
   background: rgba(108, 99, 255, 0.5);
 }
 
+.delete-confirmation {
+  padding: 24px;
+}
+
+.delete-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.delete-icon {
+  color: #ef4444;
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.delete-form .form-group {
+  margin-bottom: 16px;
+}
+
+.delete-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.delete-form input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.delete-form input.error {
+  border-color: #ef4444;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.delete-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.cancel-delete-btn, .confirm-delete-btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+}
+
+.cancel-delete-btn {
+  background-color: #6b7280;
+  color: white;
+}
+
+.confirm-delete-btn {
+  background-color: #ef4444;
+  color: white;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
 /* Responsive Design */
 @media (max-width: 480px) {
   .user-menu-modal {

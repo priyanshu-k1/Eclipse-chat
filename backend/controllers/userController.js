@@ -1,4 +1,5 @@
 const User = require('../models/userModel');
+const Orbit = require('../models/orbitModel');
 const bcrypt = require('bcryptjs');
 
 const updateDisplayName = async (req, res) => {
@@ -164,11 +165,70 @@ const getUserProfile = async (req, res) => {
         res.status(500).json({ message: 'Error retrieving user profile', error: error.message });
     }
 };
+const searchUsers = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { q } = req.query;
 
+        if (!q || q.trim() === '') {
+            return res.status(200).json({ users: [] });
+        }
+        const searchTerm = q.trim();
+        const users = await User.find({
+            _id: { $ne: userId },
+            $or: [
+                { eclipseId: { $regex: searchTerm, $options: 'i' } },
+                { username: { $regex: searchTerm, $options: 'i' } },
+                { displayName: { $regex: searchTerm, $options: 'i' } }
+            ]
+        })
+        .select('username displayName avatar eclipseId')
+        .limit(5);
+        res.status(200).json({ 
+            users: users.map(user => ({
+                id: user._id,
+                username: user.username,
+                displayName: user.displayName,
+                avatar: user.avatar,
+                eclipseId: user.eclipseId
+            }))
+        });
+    } catch (error) {
+        console.error('Error searching users:', error);
+        res.status(500).json({ message: 'Error searching users', error: error.message });
+    }
+};
+const getPendingRequests = async (req, res) => {
+     try {
+        const userId = req.user.id;
+        const pendingRequests = await Orbit.find({
+            receiverId: userId,
+            status: 'pending'
+        }).populate({
+            path: 'senderId',
+            select: 'displayName avatar eclipseId'
+        });
+        console.log('Found requests:', pendingRequests.length);
+        res.status(200).json({
+            requests: pendingRequests.map(request => ({
+                id: request._id,
+                sender: request.senderId
+            }))
+        });
+    } catch (error) {
+        console.error('Error fetching pending requests:', error);
+        res.status(500).json({
+            message: 'Failed to fetch pending requests',
+            error: error.message
+        });
+    }
+}
 module.exports = {
     updateDisplayName,
     updatePassword,
     updateProfilePic,
     deleteUser,
-    getUserProfile
+    getUserProfile,
+    searchUsers,
+    getPendingRequests
 };
