@@ -141,8 +141,7 @@ const UserSearch = ({ onUserSelect }) => {
   };
 
   const handleOpenChat = (user) => {
-    console.log('Opening chat with:', user.displayName);
-    setQuery(`${user.displayName} (@${user.eclipseId})`);
+    handleClearSearch();
     setShowSuggestions(false);
     setSelectedIndex(-1);
     if (onUserSelect) {

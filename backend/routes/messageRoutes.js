@@ -6,7 +6,8 @@ const { authenticate } = require('../middleware/authMiddleware');
 router.post('/send', authenticate, messageController.sendMessage);
 router.get('/conversation/:eclipseId', authenticate, messageController.getConversation);
 router.get('/conversations', authenticate, messageController.getAllConversations);
-router.patch('/:messageId/save', authenticate, messageController.saveMessage);
+router.patch('/save/:messageId', authenticate, messageController.saveMessage);
+router.patch('/unsave/:messageId', authenticate, messageController.unsaveMessage);
 
 router.post('/orbits/accept', authenticate, messageController.acceptOrbit);
 router.post('/orbits/deny', authenticate, messageController.denyOrbit);

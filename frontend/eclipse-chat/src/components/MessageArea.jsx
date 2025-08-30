@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import MessageBubble from './MessageBubble';
 import './MessageArea.css';
 
 const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
@@ -29,13 +30,11 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     adjustTextareaHeight();
   }, [message]);
 
-  // Function to check if a message has expired
   const isMessageExpired = (messageData) => {
     if (!messageData.expiresAt) return false;
     return new Date() >= new Date(messageData.expiresAt);
   };
 
-  // Function to remove expired messages
   const removeExpiredMessages = useCallback(() => {
     setMessages(prevMessages => {
       const nonExpiredMessages = prevMessages.filter(msg => !isMessageExpired(msg));
@@ -43,7 +42,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     });
   }, []);
 
-  // Set up expiration timeouts for messages
   const setupMessageExpirationTimeout = useCallback((messageData) => {
     if (!messageData.expiresAt) return;
 
@@ -61,7 +59,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
 
       messageExpirationTimeoutsRef.current.set(messageData.id, timeoutId);
     } else {
-      // Message is already expired, remove it immediately
       setMessages(prevMessages => 
         prevMessages.filter(msg => msg.id !== messageData.id)
       );
@@ -83,13 +80,8 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
       if (res.ok) {
         const data = await res.json();
         const fetchedMessages = data.messages || [];
-        
-        // Filter out expired messages and set up timeouts for others
         const validMessages = fetchedMessages.filter(msg => !isMessageExpired(msg));
-        
         setMessages(validMessages);
-        
-        // Set up expiration timeouts for messages that have expiration times
         validMessages.forEach(msg => {
           if (msg.expiresAt) {
             setupMessageExpirationTimeout(msg);
@@ -105,7 +97,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     }
   }, [selectedUser, setupMessageExpirationTimeout]);
 
-  // Initial fetch when user is selected
   useEffect(() => {
     if (selectedUser) {
       setIsLoading(true);
@@ -113,29 +104,19 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     }
   }, [selectedUser, fetchConversation]);
 
-  // Set up real-time polling for new messages
   useEffect(() => {
     if (!selectedUser) return;
-
-    // Start polling every 2 seconds for new messages
     const startPolling = () => {
       pollingIntervalRef.current = setInterval(() => {
         fetchConversation();
       }, 2000);
     };
-
     startPolling();
-
-    // Copy the ref value to a local variable for cleanup
     const timeoutsMap = messageExpirationTimeoutsRef.current;
-
-    // Cleanup function
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
-      
-      // Clear all message expiration timeouts
       timeoutsMap.forEach(timeoutId => {
         clearTimeout(timeoutId);
       });
@@ -143,16 +124,74 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     };
   }, [selectedUser, fetchConversation]);
 
-  // Periodic cleanup for expired messages (runs every 30 seconds)
   useEffect(() => {
     const cleanupInterval = setInterval(removeExpiredMessages, 30000);
-    
     return () => clearInterval(cleanupInterval);
   }, [removeExpiredMessages]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleSaveMessage = async (messageId) => {
+    console.log(messageId)
+    try {
+      const token = localStorage.getItem("token");
+      const targetMessage = messages.find(msg => msg.id === messageId);
+      const isFromMe = targetMessage?.sender?.eclipseId === currentUser?.eclipseId;
+      const isSavedByMe = isFromMe ? targetMessage?.isSavedBySender : targetMessage?.isSavedByReceiver;
+      
+      // Determine if we're saving or unsaving
+      const endpoint = isSavedByMe ? 'unsave' : 'save';
+      
+      const res = await fetch(`http://localhost:5001/api/messages/${endpoint}/${messageId}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Update the message in state
+        setMessages(prevMessages => 
+          prevMessages.map(msg => 
+            msg.id === messageId 
+              ? { 
+                  ...msg, 
+                  isSavedBySender: data.isSavedBySender,
+                  isSavedByReceiver: data.isSavedByReceiver,
+                  expiresAt: data.expiresAt 
+                }
+              : msg
+          )
+        );
+        
+        // Handle expiration timeout based on save status
+        if (data.isSavedBySender && data.isSavedByReceiver) {
+          // Both saved - clear expiration timeout
+          const timeoutId = messageExpirationTimeoutsRef.current.get(messageId);
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            messageExpirationTimeoutsRef.current.delete(messageId);
+          }
+        } else if (data.expiresAt) {
+          // Message has expiration - set up timeout
+          setupMessageExpirationTimeout({
+            id: messageId,
+            expiresAt: data.expiresAt
+          });
+        }
+      } else {
+        const errorData = await res.json();
+        alert(errorData.message || 'Failed to update message');
+      }
+    } catch (error) {
+      console.error('Error updating message:', error);
+      alert('Network error. Please try again.');
+    }
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -161,8 +200,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
 
     setIsSending(true);
     const messageToSend = message.trim();
-    
-    // Optimistically add message to UI
     const optimisticMessage = {
       id: `temp-${Date.now()}`,
       content: messageToSend,
@@ -192,28 +229,20 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
       const data = await res.json();
       
       if (!res.ok) {
-        // Remove optimistic message on failure
         setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
         
         console.error('Failed to send message:', data.message);
         if (res.status === 403) {
-          alert(data.message); // Show orbit-related restrictions
+          alert(data.message); 
         } else {
           alert('Failed to send message. Please try again.');
         }
-        
-        // Restore the message in input
         setMessage(messageToSend);
       } else {
-        // Remove optimistic message and fetch fresh data
         setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
-        
-        // Force immediate refresh to get the real message
         setTimeout(() => {
           fetchConversation();
         }, 100);
-
-        // Notify parent component to refresh conversations list
         if (onMessageSent) {
           onMessageSent();
         }
@@ -250,7 +279,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     
     if (diffInHours < 24) {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffInHours < 168) { // Less than a week
+    } else if (diffInHours < 168) { 
       const days = Math.floor(diffInHours / 24);
       return `${days}d ago`;
     } else {
@@ -258,7 +287,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     }
   };
 
-  // Format expiration countdown
   const formatExpirationTime = (expiresAt) => {
     const expirationTime = new Date(expiresAt);
     const currentTime = new Date();
@@ -306,7 +334,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
             {/* <span>@{selectedUser.eclipseId}</span>  have to fix this*/}
           </div>
         </div>
-         <button className="back-button" onClick={onBack}>
+        <button className="back-button" onClick={onBack}>
           <i className="ph ph-x"></i>
         </button>
       </div>
@@ -329,21 +357,15 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
         ) : (
           <div className="messages-list">
             {messages.map((msg) => (
-              <div 
-                key={msg.id} 
-                className={`message ${isMessageFromMe(msg) ? 'message-sent' : 'message-received'}`}
-              >
-                <div className="message-content">
-                  <p>{msg.content}</p>
-                  <span className="message-time">{formatTime(msg.timestamp)}</span>
-                  {msg.expiresAt && (
-                    <span className="message-expires">
-                      <i className="ph ph-clock"></i> 
-                      <span>{formatExpirationTime(msg.expiresAt)}</span>
-                    </span>
-                  )}
-                </div>
-              </div>
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                isFromMe={isMessageFromMe(msg)}
+                formatTime={formatTime}
+                formatExpirationTime={formatExpirationTime}
+                onSaveMessage={handleSaveMessage}
+                currentUser={currentUser}
+              />
             ))}
             
             <div ref={messagesEndRef} />

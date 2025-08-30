@@ -1,8 +1,8 @@
 const Message = require('../models/messageModel');
+const Orbit = require('../models/orbitModel');
 const findUserByEclipseId = require('../utils/findUserByEclipseId');
 const { encryptMessage, decryptMessage } = require('../micro-service/encryptionService');
 
-// Send message using eclipseId
 exports.sendMessage = async (req, res) => {
     try {
         const { recipientEclipseId, content } = req.body;
@@ -18,18 +18,13 @@ exports.sendMessage = async (req, res) => {
                 message: 'Recipient not found' 
             });
         }
-        
-        // Check if users are friends
         const isFriend = req.user.friends.includes(recipient._id) || recipient.friends.includes(req.user.id);
         
         if (!isFriend) {
-            // Check for existing orbit request
             let orbit = await Orbit.findOne({
                 senderId: req.user.id,
                 receiverId: recipient._id
             });
-            
-            // If no orbit exists, create one
             if (!orbit) {
                 orbit = new Orbit({
                     senderId: req.user.id,
@@ -39,7 +34,6 @@ exports.sendMessage = async (req, res) => {
                 });
             }
             
-            // Check if orbit was denied within the last 2 weeks
             if (orbit.status === 'denied' && orbit.deniedAt) {
                 const twoWeeksAgo = new Date();
                 twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
@@ -49,21 +43,16 @@ exports.sendMessage = async (req, res) => {
                         message: 'Cannot send messages. Orbit request was denied recently.' 
                     });
                 } else {
-                    // Reset denied orbit after 2 weeks
                     orbit.status = 'pending';
                     orbit.messageCount = 0;
                     orbit.deniedAt = null;
                 }
             }
-            
-            // Check message limit for pending orbits
             if (orbit.status === 'pending' && orbit.messageCount >= 5) {
                 return res.status(403).json({ 
                     message: 'Message limit reached. Please wait for the recipient to accept your orbit request.' 
                 });
             }
-            
-            // Increment message count for pending orbits
             if (orbit.status === 'pending') {
                 orbit.messageCount += 1;
                 await orbit.save();
@@ -77,7 +66,9 @@ exports.sendMessage = async (req, res) => {
             content: encryptedData,
             iv,
             authTag,
-            expiresAt: Date.now() + 5 * 60 * 1000 
+            expiresAt: Date.now() + 5 * 60 * 1000,
+            isSavedBySender: false,
+            isSavedByReceiver: false
         });
 
         const savedMessage = await message.save();
@@ -100,7 +91,9 @@ exports.sendMessage = async (req, res) => {
                 sender: savedMessage.sender,
                 receiver: savedMessage.receiver,
                 timestamp: savedMessage.createdAt,
-                expiresAt: savedMessage.expiresAt
+                expiresAt: savedMessage.expiresAt,
+                isSavedBySender: savedMessage.isSavedBySender,
+                isSavedByReceiver: savedMessage.isSavedByReceiver
             };
             
             io.to(roomId).emit('receive_message', messageData);
@@ -122,8 +115,6 @@ exports.sendMessage = async (req, res) => {
         });
     }
 };
-
-// Accept an orbit request
 exports.acceptOrbit = async (req, res) => {
     try {
         const { senderEclipseId } = req.body;
@@ -140,8 +131,6 @@ exports.acceptOrbit = async (req, res) => {
                 message: 'Sender not found' 
             });
         }
-        
-        // Find the pending orbit request
         const orbit = await Orbit.findOne({
             senderId: sender._id,
             receiverId: req.user.id,
@@ -153,12 +142,8 @@ exports.acceptOrbit = async (req, res) => {
                 message: 'No pending orbit request found' 
             });
         }
-        
-        // Update orbit status to accepted
         orbit.status = 'accepted';
         await orbit.save();
-        
-        // Add each user to the other's friends list if not already friends
         if (!req.user.friends.includes(sender._id)) {
             req.user.friends.push(sender._id);
             await req.user.save();
@@ -182,8 +167,6 @@ exports.acceptOrbit = async (req, res) => {
         });
     }
 };
-
-// Deny an orbit request
 exports.denyOrbit = async (req, res) => {
     try {
         const { senderEclipseId } = req.body;
@@ -200,8 +183,6 @@ exports.denyOrbit = async (req, res) => {
                 message: 'Sender not found' 
             });
         }
-        
-        // Find the pending orbit request
         const orbit = await Orbit.findOne({
             senderId: sender._id,
             receiverId: req.user.id,
@@ -213,8 +194,6 @@ exports.denyOrbit = async (req, res) => {
                 message: 'No pending orbit request found' 
             });
         }
-        
-        // Update orbit status to denied and set deniedAt timestamp
         orbit.status = 'denied';
         orbit.deniedAt = new Date();
         await orbit.save();
@@ -232,6 +211,7 @@ exports.denyOrbit = async (req, res) => {
         });
     }
 };
+
 exports.getConversation = async (req, res) => {
     try {
         const { eclipseId } = req.params;
@@ -279,6 +259,7 @@ exports.getConversation = async (req, res) => {
         });
     }
 };
+
 exports.getAllConversations = async (req, res) => {
     try {
         const conversations = await Message.aggregate([
@@ -361,6 +342,7 @@ exports.getAllConversations = async (req, res) => {
         });
     }
 };
+
 exports.saveMessage = async (req, res) => {
     try {
         const { messageId } = req.params;
@@ -369,6 +351,7 @@ exports.saveMessage = async (req, res) => {
         if (!message) {
             return res.status(404).json({ message: 'Message not found' });
         }
+
         const isSender = message.sender.toString() === req.user.id;
         const isReceiver = message.receiver.toString() === req.user.id;
 
@@ -385,6 +368,20 @@ exports.saveMessage = async (req, res) => {
         }
 
         await message.save();
+        const io = req.app.get('io');
+        if (io) {
+            const roomId = generateRoomId(req.user.eclipseId, 
+                isSender ? message.receiver.eclipseId : message.sender.eclipseId);
+            
+            const updateData = {
+                messageId: message._id,
+                isSavedBySender: message.isSavedBySender,
+                isSavedByReceiver: message.isSavedByReceiver,
+                expiresAt: message.expiresAt
+            };
+            
+            io.to(roomId).emit('message_saved', updateData);
+        }
 
         res.json({ 
             message: 'Message saved successfully',
@@ -401,6 +398,107 @@ exports.saveMessage = async (req, res) => {
         });
     }
 };
+exports.getSavedMessages = async (req, res) => {
+    try {
+        const { page = 1, limit = 20 } = req.query;
+        
+        const messages = await Message.find({
+            $or: [
+                { sender: req.user.id, isSavedBySender: true },
+                { receiver: req.user.id, isSavedByReceiver: true }
+            ]
+        })
+        .populate('sender', 'eclipseId username displayName avatar')
+        .populate('receiver', 'eclipseId username displayName avatar')
+        .sort({ createdAt: -1 })
+        .limit(limit * 1)
+        .skip((page - 1) * limit);
+
+        const decryptedMessages = messages.map(message => ({
+            id: message._id,
+            content: decryptMessage(message.content, message.iv, message.authTag),
+            sender: message.sender,
+            receiver: message.receiver,
+            timestamp: message.createdAt,
+            savedAt: message.updatedAt,
+            isSavedBySender: message.isSavedBySender,
+            isSavedByReceiver: message.isSavedByReceiver
+        }));
+
+        res.json({
+            savedMessages: decryptedMessages,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                hasMore: messages.length === parseInt(limit)
+            }
+        });
+
+    } catch (error) {
+        console.error('Error getting saved messages:', error);
+        res.status(500).json({ 
+            message: 'Failed to get saved messages',
+            error: process.env.NODE_ENV === 'development' ? error.message : {}
+        });
+    }
+};
+exports.unsaveMessage = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ message: 'Message not found' });
+        }
+
+        const isSender = message.sender.toString() === req.user.id;
+        const isReceiver = message.receiver.toString() === req.user.id;
+
+        if (!isSender && !isReceiver) {
+            return res.status(403).json({ message: 'Not authorized to unsave this message' });
+        }
+        if (isSender) {
+            message.isSavedBySender = false;
+        } else {
+            message.isSavedByReceiver = false;
+        }
+        if (!message.isSavedBySender && !message.isSavedByReceiver && !message.expiresAt) {
+            message.expiresAt = new Date(Date.now() + 5 * 60 * 1000); 
+        }
+
+        await message.save();
+        const io = req.app.get('io');
+        if (io) {
+            const roomId = generateRoomId(req.user.eclipseId, 
+                isSender ? message.receiver.eclipseId : message.sender.eclipseId);
+            
+            const updateData = {
+                messageId: message._id,
+                isSavedBySender: message.isSavedBySender,
+                isSavedByReceiver: message.isSavedByReceiver,
+                expiresAt: message.expiresAt
+            };
+            
+            io.to(roomId).emit('message_unsaved', updateData);
+        }
+
+        res.json({ 
+            message: 'Message unsaved successfully',
+            isSavedBySender: message.isSavedBySender,
+            isSavedByReceiver: message.isSavedByReceiver,
+            expiresAt: message.expiresAt
+        });
+
+    } catch (error) {
+        console.error('Error unsaving message:', error);
+        res.status(500).json({ 
+            message: 'Failed to unsave message',
+            error: process.env.NODE_ENV === 'development' ? error.message : {}
+        });
+    }
+};
+
+
 function generateRoomId(eclipseId1, eclipseId2) {
     return [eclipseId1, eclipseId2].sort().join('_');
 }
