@@ -19,13 +19,13 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
     confirm: false
   });
 
-  // Initialize avatar settings with proper character sync
+  // Initialize avatar settings with proper defaults
   const [avatarSettings, setAvatarSettings] = useState({
-    character: user?.displayName?.[0]?.toUpperCase() || '?',
+    character: '', // Empty by default
     font: 'Montserrat',
     backgroundColor: '#3B82F6',
     foregroundColor: '#FFFFFF',
-    useGradient: false,
+    useGradient: false, // Off by default
     gradientColor: '#9333EA'
   });
 
@@ -35,6 +35,11 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
       setAvatarSettings(prev => ({
         ...prev,
         character: formData.displayName[0].toUpperCase()
+      }));
+    } else {
+      setAvatarSettings(prev => ({
+        ...prev,
+        character: ''
       }));
     }
   }, [formData.displayName]);
@@ -63,11 +68,11 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
         confirmPassword: ''
       });
       setAvatarSettings({
-        character: user?.displayName?.[0]?.toUpperCase() || '?',
+        character: user?.displayName?.[0]?.toUpperCase() || '', // Empty if no display name
         font: 'Montserrat',
         backgroundColor: '#3B82F6',
         foregroundColor: '#FFFFFF',
-        useGradient: true,
+        useGradient: false, // Off by default
         gradientColor: '#9333EA'
       });
       setErrors({});
@@ -142,10 +147,14 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
     const cleanFg = foregroundColor.replace('#', '');
     const cleanGradient = gradientColor.replace('#', '');
     
-    const bgParam = useGradient ? `${cleanBg},${cleanGradient}` : cleanBg;
     const displayChar = character || '?';
     
-    return `https://placehold.co/120x120/${bgParam}/${cleanFg}?text=${encodeURIComponent(displayChar)}&font=${encodeURIComponent(font)}`;
+    // Use your gradient format with bg parameter
+    if (useGradient) {
+      return `https://placehold.co/120x120/${cleanBg}/${cleanFg}?text=${encodeURIComponent(displayChar)}&font=${encodeURIComponent(font)}&bg=${cleanBg},${cleanGradient}&radius=50`;
+    } else {
+      return `https://placehold.co/120x120/${cleanBg}/${cleanFg}?text=${encodeURIComponent(displayChar)}&font=${encodeURIComponent(font)}&radius=50`;
+    }
   };
 
   const validateForm = () => {
@@ -207,7 +216,6 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
       if (result.success) {
         setSuccessMessage(result.message);
         
-        // Clear password fields after successful update
         if (activeTab === 'security') {
           setFormData(prev => ({
             ...prev,
@@ -450,9 +458,14 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
                       >
                         <option value="Montserrat">Montserrat</option>
                         <option value="Roboto">Roboto</option>
-                        <option value="Open Sans">Open Sans</option>
+                        <option value="OpenSans">Open Sans</option>
                         <option value="Lato">Lato</option>
-                        <option value="Poppins">Poppins</option>
+                        <option value="SourceSansPro">Source Sans Pro</option>
+                        <option value="Raleway">Raleway</option>
+                        <option value="Ubuntu">Ubuntu</option>
+                        <option value="PTSans">PT Sans</option>
+                        <option value="Oswald">Oswald</option>
+                        <option value="NotoSans">Noto Sans</option>
                       </select>
                       <div className="input-icon">
                         <span className='material-symbols-outlined'>font_download</span>
@@ -500,38 +513,6 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        name="useGradient"
-                        checked={avatarSettings.useGradient}
-                        onChange={handleAvatarSettingChange}
-                      />
-                      Use Gradient Background
-                    </label>
-                  </div>
-                  {avatarSettings.useGradient && (
-                    <div className="form-group">
-                      <label htmlFor="gradientColor">Gradient Color</label>
-                      <div className="color-picker-container">
-                        <input
-                          type="color"
-                          id="gradientColor"
-                          name="gradientColor"
-                          value={avatarSettings.gradientColor}
-                          onChange={handleAvatarSettingChange}
-                        />
-                        <input
-                          type="text"
-                          value={avatarSettings.gradientColor}
-                          onChange={(e) => handleHexColorChange('gradientColor', e.target.value)}
-                          placeholder="#000000"
-                          className="color-hex-input"
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             )}

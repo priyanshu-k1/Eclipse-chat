@@ -59,26 +59,25 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
   const fetchDeniedRequests = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5001/api/users/denied", {
+      const response = await fetch("http://localhost:5001/api/orbits/get-denied-list", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-
       if (response.ok) {
         const data = await response.json();
         setDeniedRequests(data.requests || []);
       } else {
         console.error("Failed to fetch denied requests");
       }
-    } catch (error) {
+    } 
+    catch (error) {
       console.error("Error fetching denied requests:", error);
     }
   }, []);
-
-  // Fixed: Move fetchAllData inside useEffect to avoid circular dependency
+  
   useEffect(() => {
     const fetchAllData = async () => {
       await Promise.all([
@@ -108,7 +107,6 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
 
       if (response.ok) {
         if (action === 'accept') {
-          // Move from pending to connections
           const acceptedRequest = pendingRequests.find(req => req.id === requestId);
           if (acceptedRequest) {
             setPendingRequests(prev => prev.filter(req => req.id !== requestId));
@@ -119,7 +117,6 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
             }]);
           }
         } else if (action === 'deny') {
-          // Move from pending to denied
           const deniedRequest = pendingRequests.find(req => req.id === requestId);
           if (deniedRequest) {
             setPendingRequests(prev => prev.filter(req => req.id !== requestId));
@@ -139,6 +136,34 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
     }
   };
 
+    const handleRemoveConnection = async (userId) => {
+    setActionLoading(prev => ({ ...prev, [userId]: 'remove' }));
+    
+    try {
+      const token = localStorage.getItem("token");
+      // Fixed: Pass the user ID (not orbit ID) to match your backend logic
+      const response = await fetch(`http://localhost:5001/api/orbits/remove-connection/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        // Remove the connection from the state by filtering out the connection with matching user ID
+        setConnections(prev => prev.filter(conn => conn.user.id !== userId));
+        console.log("Connection removed successfully");
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to remove connection:", errorData.message);
+      }
+    } catch (error) {
+      console.error("Error removing connection:", error);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
   const getInitials = (displayName) => {
     if (!displayName) return "?";
     return displayName
@@ -172,7 +197,7 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
   };
 
   const renderPendingRequests = () => {
-    if (pendingRequests.length === 0) {
+    if (!Array.isArray(pendingRequests) || pendingRequests.length === 0) {
       return (
         <div className="empty-state">
           <div className="empty-icon">
@@ -186,115 +211,130 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
 
     return (
       <div className="requests-list">
-        {pendingRequests.map((request) => (
-          <div key={request.id} className="request-item">
-            <div className="request-user">
-              <div className="user-avatar">
-                {request.sender.avatar ? (
-                  <img src={request.sender.avatar} alt={request.sender.displayName} />
-                ) : (
-                  <span className="avatar-initials">
-                    {getInitials(request.sender.displayName)}
-                  </span>
-                )}
-                <div className="online-indicator"></div>
+        {pendingRequests.map((request) => {
+          const sender = request?.sender || {};
+          const requestId = request?.id || Math.random().toString();
+          
+          return (
+            <div key={requestId} className="request-item">
+              <div className="request-user">
+                <div className="user-avatar">
+                  {sender.avatar ? (
+                    <img src={sender.avatar} alt={sender.displayName || 'User'} />
+                  ) : (
+                    <span className="avatar-initials">
+                      {getInitials(sender.displayName)}
+                    </span>
+                  )}
+                </div>
+                <div className="user-info">
+                  <h4 className="user-name">{sender.displayName || 'Unknown User'}</h4>
+                  <p className="user-id">@{sender.eclipseId || 'unknown'}</p>
+                </div>
               </div>
-              <div className="user-info">
-                <h4 className="user-name">{request.sender.displayName}</h4>
-                <p className="user-id">@{request.sender.eclipseId}</p>
+              
+              <div className="request-actions">
+                <button
+                  className="action-btn reject-btn"
+                  onClick={() => handleRequestAction(requestId, 'deny')}
+                  disabled={actionLoading[requestId]}
+                  title="Reject request"
+                >
+                  {actionLoading[requestId] === 'deny' ? (
+                    <div className="btn-spinner"></div>
+                  ) : (
+                    <i className="ph ph-x"></i>
+                  )}
+                </button>
+                <button
+                  className="action-btn accept-btn"
+                  onClick={() => handleRequestAction(requestId, 'accept')}
+                  disabled={actionLoading[requestId]}
+                  title="Accept request"
+                >
+                  {actionLoading[requestId] === 'accept' ? (
+                    <div className="btn-spinner"></div>
+                  ) : (
+                    <i className="ph ph-check"></i>
+                  )}
+                </button>
               </div>
             </div>
-            
-            <div className="request-actions">
-              <button
-                className="action-btn reject-btn"
-                onClick={() => handleRequestAction(request.id, 'deny')}
-                disabled={actionLoading[request.id]}
-                title="Reject request"
-              >
-                {actionLoading[request.id] === 'deny' ? (
-                  <div className="btn-spinner"></div>
-                ) : (
-                  <i className="ph ph-x"></i>
-                )}
-              </button>
-              <button
-                className="action-btn accept-btn"
-                onClick={() => handleRequestAction(request.id, 'accept')}
-                disabled={actionLoading[request.id]}
-                title="Accept request"
-              >
-                {actionLoading[request.id] === 'accept' ? (
-                  <div className="btn-spinner"></div>
-                ) : (
-                  <i className="ph ph-check"></i>
-                )}
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
 
-  const renderConnections = () => {
-    if (connections.length === 0) {
-      return (
-        <div className="empty-state">
-          <div className="empty-icon">
-            <i className="ph ph-planets"></i>
-          </div>
-          <h3>No Stellar Companions</h3>
-          <p>Your constellation awaits new stars</p>
-        </div>
-      );
-    }
-
+ const renderConnections = () => {
+  if (!Array.isArray(connections) || connections.length === 0) {
     return (
-      <div className="requests-list">
-        {connections.map((connection) => (
-          <div key={connection.id} className="request-item">
+      <div className="empty-state">
+        <div className="empty-icon">
+          <i className="ph ph-moon-stars"></i>
+        </div>
+        <h3>No Stellar Companions</h3>
+        <p>Your constellation awaits new stars</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="requests-list">
+      {connections.map((connection) => {
+        const user = connection.user || {};
+        const userId =  user.id;
+        return (
+          <div key={userId} className="request-item">
             <div className="request-user">
               <div className="user-avatar">
-                {connection.user.avatar ? (
-                  <img src={connection.user.avatar} alt={connection.user.displayName} />
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.displayName || 'User'} />
                 ) : (
                   <span className="avatar-initials">
-                    {getInitials(connection.user.displayName)}
+                    {getInitials(user.displayName)}
                   </span>
                 )}
-                <div className="online-indicator"></div>
               </div>
               <div className="user-info">
-                <h4 className="user-name">{connection.user.displayName}</h4>
-                <p className="user-id">@{connection.user.eclipseId}</p>
+                <h4 className="user-name">{user.displayName || 'Unknown User'}</h4>
+                <p className="user-id">@{user.eclipseId || 'unknown'}</p>
               </div>
             </div>
-            
-            <div className="status-badge status-connected">
-              Connected
-            </div>
-            
+
+            <div className="status-badge status-connected">Connected</div>
+
             <div className="request-actions">
               <button
-                className="action-btn message-btn"
-                title="Send message"
+                className="action-btn remove-btn"
+                onClick={() => handleRemoveConnection(userId)} // ✅ orbit id
+                disabled={actionLoading[userId]}
+                title="Remove connection"
               >
+                {actionLoading[userId] === 'remove' ? (
+                  <div className="btn-spinner"></div>
+                ) : (
+                  <i className="ph ph-user-minus"></i>
+                )}
+              </button>
+              <button className="action-btn message-btn" title="Send message">
                 <i className="ph ph-chat-circle"></i>
               </button>
             </div>
           </div>
-        ))}
-      </div>
-    );
-  };
+        );
+      })}
+    </div>
+  );
+};
+
 
   const renderDeniedRequests = () => {
-    if (deniedRequests.length === 0) {
+    if (!Array.isArray(deniedRequests) || deniedRequests.length === 0) {
       return (
         <div className="empty-state">
           <div className="empty-icon">
-            <i className="ph ph-black-hole"></i>
+           <i class="ph ph-alien"></i>
           </div>
           <h3>No Rejected Signals</h3>
           <p>All cosmic requests are still in orbit</p>
@@ -304,29 +344,34 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
 
     return (
       <div className="requests-list">
-        {deniedRequests.map((request) => (
-          <div key={request.id} className="request-item">
-            <div className="request-user">
-              <div className="user-avatar">
-                {request.sender.avatar ? (
-                  <img src={request.sender.avatar} alt={request.sender.displayName} />
-                ) : (
-                  <span className="avatar-initials">
-                    {getInitials(request.sender.displayName)}
-                  </span>
-                )}
+        {deniedRequests.map((request) => {
+          const sender = request?.sender || {};
+          const requestId = request?.id || Math.random().toString();
+          
+          return (
+            <div key={requestId} className="request-item">
+              <div className="request-user">
+                <div className="user-avatar">
+                  {sender.avatar ? (
+                    <img src={sender.avatar} alt={sender.displayName || 'User'} />
+                  ) : (
+                    <span className="avatar-initials">
+                      {getInitials(sender.displayName)}
+                    </span>
+                  )}
+                </div>
+                <div className="user-info">
+                  <h4 className="user-name">{sender.displayName || 'Unknown User'}</h4>
+                  <p className="user-id">@{sender.eclipseId || 'unknown'}</p>
+                </div>
               </div>
-              <div className="user-info">
-                <h4 className="user-name">{request.sender.displayName}</h4>
-                <p className="user-id">@{request.sender.eclipseId}</p>
+              
+              <div className="status-badge status-denied">
+                Rejected
               </div>
             </div>
-            
-            <div className="status-badge status-denied">
-              Rejected
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -334,11 +379,14 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
   const getFooterText = () => {
     switch (activeTab) {
       case 'pending':
-        return `${pendingRequests.length} incoming signal${pendingRequests.length !== 1 ? 's' : ''}`;
+        { const pendingCount = Array.isArray(pendingRequests) ? pendingRequests.length : 0;
+        return `${pendingCount} incoming signal${pendingCount !== 1 ? 's' : ''}`; }
       case 'constellation':
-        return `${connections.length} stellar companion${connections.length !== 1 ? 's' : ''}`;
+        { const connectionsCount = Array.isArray(connections) ? connections.length : 0;
+        return `${connectionsCount} stellar companion${connectionsCount !== 1 ? 's' : ''}`; }
       case 'blackhole':
-        return `${deniedRequests.length} rejected signal${deniedRequests.length !== 1 ? 's' : ''}`;
+        { const deniedCount = Array.isArray(deniedRequests) ? deniedRequests.length : 0;
+        return `${deniedCount} rejected signal${deniedCount !== 1 ? 's' : ''}`; }
       default:
         return '';
     }
@@ -373,7 +421,7 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
           >
             <i className="ph ph-radio"></i>
             <span>Incoming Signals</span>
-            {pendingRequests.length > 0 && (
+            {Array.isArray(pendingRequests) && pendingRequests.length > 0 && (
               <span className="tab-count">{pendingRequests.length}</span>
             )}
           </button>
@@ -383,7 +431,7 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
           >
             <i className="ph ph-star"></i>
             <span>Constellation</span>
-            {connections.length > 0 && (
+            {Array.isArray(connections) && connections.length > 0 && (
               <span className="tab-count">{connections.length}</span>
             )}
           </button>
@@ -392,8 +440,8 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
             onClick={() => setActiveTab('blackhole')}
           >
             <i className="ph ph-prohibit"></i>
-            <span>Black Hole</span>
-            {deniedRequests.length > 0 && (
+            <span>dwarf planet</span>
+            {Array.isArray(deniedRequests) && deniedRequests.length > 0 && (
               <span className="tab-count">{deniedRequests.length}</span>
             )}
           </button>

@@ -20,7 +20,7 @@
 .user-menu-modal {
   position: absolute;
   top: 4rem;
-  left: 1rem;
+  left: 2rem;
   width: 320px;
   background: rgba(31, 31, 46, 0.95);
   backdrop-filter: blur(20px);
@@ -37,24 +37,25 @@
 
 /* Header */
 .user-menu-header {
-  padding: 1.5rem;
   background: linear-gradient(135deg, rgba(108, 99, 255, 0.1), rgba(0, 194, 255, 0.05));
   border-bottom: 1px solid rgba(108, 99, 255, 0.2);
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  padding: 0.4rem;
 }
 
 .user-info {
+  margin-top:0rem !important;
+  min-height:100% !important;
   display: flex;
-  gap: 1rem;
   align-items: center;
 }
 
 .user-avatar-large {
   position: relative;
+  display: flex;
   width: 48px;
   height: 48px;
+  margin-left: -7.5rem;
 }
 
 .user-avatar-large img {
@@ -79,7 +80,11 @@
 }
 
 .user-details {
-  flex: 1;
+  margin-left: 0.7rem;
+  display: flex;
+  flex-direction: column !important;
+  min-width: 10rem!important;
+
 }
 
 .user-display-name {
@@ -93,12 +98,12 @@
   background-clip: text;
 }
 
-.modal-user-name {
+/* .modal-user-name {
   font-size: 0.85rem;
   color: #B0B0B0;
   margin: 0;
   opacity: 0.9;
-}
+} */
 
 .close-button {
   background: rgba(255, 255, 255, 0.1);

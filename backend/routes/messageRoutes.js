@@ -8,7 +8,6 @@ router.get('/conversation/:eclipseId', authenticate, messageController.getConver
 router.get('/conversations', authenticate, messageController.getAllConversations);
 router.patch('/:messageId/save', authenticate, messageController.saveMessage);
 
-// New orbit management routes
 router.post('/orbits/accept', authenticate, messageController.acceptOrbit);
 router.post('/orbits/deny', authenticate, messageController.denyOrbit);
 

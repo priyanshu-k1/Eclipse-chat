@@ -1,5 +1,6 @@
 const Orbit = require('../models/orbitModel');
 const User = require('../models/userModel');
+const { getOrbitIdByUserId } = require('../utils/connectionUtils');
 
 // Send connection request
 const sendConnectionRequest = async (req, res) => {
@@ -231,12 +232,63 @@ const checkRelationshipStatus = async (req, res) => {
         res.status(500).json({ message: 'Error checking relationship status', error: error.message });
     }
 };
+const getDeniedList = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const deniedOrbits = await Orbit.find({
+            senderId: userId,
+            status: 'denied'
+        }).populate('receiverId', 'username displayName avatar eclipseId');
 
+        const deniedUsers = deniedOrbits.map(orbit => ({
+            id: orbit.receiverId._id,
+            username: orbit.receiverId.username,
+            displayName: orbit.receiverId.displayName,
+            avatar: orbit.receiverId.avatar,
+            eclipseId: orbit.receiverId.eclipseId,
+            deniedAt: orbit.deniedAt || orbit.updatedAt
+        }));
+
+        res.status(200).json({
+            message: 'Denied users retrieved successfully',
+            deniedUsers
+        });
+    } catch (error) {
+        console.error('Error getting denied users:', error);
+        res.status(500).json({ message: 'Error getting denied users', error: error.message });
+    }
+};
+const removeConnection = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const otherUserId = req.params.connectionId;
+    console.log("Removing connection between:", userId, "and", otherUserId);
+
+    const orbitId = await getOrbitIdByUserId(userId, otherUserId);
+    console.log("Found orbit ID:", orbitId);
+
+    if (!orbitId) {
+      return res.status(404).json({ message: "Connection not found" });
+    }
+    await User.findByIdAndUpdate(userId, { $pull: { friends: otherUserId } });
+    await User.findByIdAndUpdate(otherUserId, { $pull: { friends: userId } });
+    await Orbit.findByIdAndDelete(orbitId);
+    res.status(200).json({
+      message: "Connection removed successfully",
+      removedConnectionId: orbitId
+    });
+  } catch (error) {
+    console.error("Error removing connection:", error);
+    res.status(500).json({ message: "Error removing connection", error: error.message });
+  }
+};
 module.exports = {
     sendConnectionRequest,
     acceptConnectionRequest,
     denyConnectionRequest,
     getUserOrbits,
     cancelConnectionRequest,
-    checkRelationshipStatus
+    checkRelationshipStatus,
+    getDeniedList,
+    removeConnection
 };

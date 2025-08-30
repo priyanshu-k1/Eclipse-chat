@@ -352,13 +352,16 @@
 .user-info {
   flex-grow: 1;
   min-width: 0;
+  flex-direction: column;
+  margin-top:1rem;
+  margin-left:-6rem;
+
 }
 
 .user-info h4 {
   font-size: 1rem;
   font-weight: 600;
   color: #FFFFFF;
-  margin: 0 0 0.25rem 0;
   text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
   white-space: nowrap;
   overflow: hidden;
@@ -368,7 +371,7 @@
 .user-info p {
   font-size: 0.85rem;
   color: #8A8AA0;
-  margin: 0;
+  margin-top: -22px;
   opacity: 0.8;
   white-space: nowrap;
   overflow: hidden;
@@ -560,7 +563,28 @@
     box-shadow: 0 0 10px #00FF88;
   }
 }
+.remove-btn {
+  background: rgba(255, 107, 107, 0.15);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  color: #FF6B6B;
+}
 
+.remove-btn:hover:not(:disabled) {
+  background: rgba(255, 107, 107, 0.25);
+  box-shadow: 0 0 15px rgba(255, 107, 107, 0.3);
+  transform: scale(1.1);
+}
+
+.request-item .status-badge {
+  margin-left: auto;
+  margin-right: 1rem;
+}
+
+.request-item .request-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
 /* Responsive Design */
 @media (max-width: 768px) {
   .connection-modal {

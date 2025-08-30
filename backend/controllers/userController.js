@@ -223,6 +223,49 @@ const getPendingRequests = async (req, res) => {
         });
     }
 }
+const getConnections = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Find all accepted orbits for this user
+    const orbits = await Orbit.find({
+      $or: [
+        { senderId: userId, status: 'accepted' },
+        { receiverId: userId, status: 'accepted' }
+      ]
+    })
+      .populate('senderId', 'displayName avatar eclipseId')
+      .populate('receiverId', 'displayName avatar eclipseId');
+
+    // Format the response so frontend has orbitId + other user's details
+    const connections = orbits.map(orbit => {
+      const otherUser =
+        orbit.senderId._id.toString() === userId
+          ? orbit.receiverId
+          : orbit.senderId;
+
+      return {
+        id: orbit._id, // Orbit ID (used for remove API)
+        user: {
+          id: otherUser._id,
+          displayName: otherUser.displayName,
+          avatar: otherUser.avatar,
+          eclipseId: otherUser.eclipseId
+        }
+      };
+    });
+
+    res.status(200).json({ connections });
+  } catch (error) {
+    console.error('Error fetching connections:', error);
+    res.status(500).json({
+      message: 'Failed to fetch connections',
+      error: error.message
+    });
+  }
+};
+
+
 module.exports = {
     updateDisplayName,
     updatePassword,
@@ -230,5 +273,6 @@ module.exports = {
     deleteUser,
     getUserProfile,
     searchUsers,
-    getPendingRequests
+    getPendingRequests,
+    getConnections
 };

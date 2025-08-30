@@ -442,73 +442,244 @@ body{
   box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
 }
 
+/* Conversations List Styles */
+.conversations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
 
-.messageArea {
-  min-width: 70vw;
-  height: 100vh;
-  background: linear-gradient(135deg, #0B0C10 0%, #1F1F2E 100%);
+.conversation-card {
+  margin-top:0.5rem;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 2rem;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
 }
 
-/* Background glow effect */
-.messageArea::before {
+/* Remove the automatic slide-in animation */
+.conversation-card {
+  animation: slideInConversation 0.3s ease-out;
+}
+
+/* Only apply slide-in animation to new conversations */
+.conversation-card.new-conversation {
+  animation: slideInConversation 0.3s ease-out;
+}
+
+.conversation-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.conversation-card.selected {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.conversation-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-right: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.conversation-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Unread message indicator dot on avatar */
+.conversation-avatar::after {
   content: '';
   position: absolute;
-  top: 20%;
-  right: 20%;
-  width: 300px;
-  height: 300px;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
   border-radius: 50%;
-  pointer-events: none;
+  border: 2px solid #0F0F1A;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 8px rgba(255, 107, 107, 0.6);
 }
 
-.welcome-container {
-  text-align: center;
-  max-width: 600px;
-  z-index: 2;
+.conversation-avatar.has-unread::after {
+  opacity: 1;
+  transform: scale(1);
+  animation: newMessagePulse 2s infinite;
 }
 
-/* Welcome Header */
-.welcome-header {
-  margin-bottom: 3rem;
+@keyframes newMessagePulse {
+  0% { 
+    box-shadow: 0 0 8px rgba(255, 107, 107, 0.6);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 16px rgba(255, 107, 107, 0.8), 0 0 24px rgba(255, 107, 107, 0.4);
+    transform: scale(1.1);
+  }
+  100% { 
+    box-shadow: 0 0 8px rgba(255, 107, 107, 0.6);
+    transform: scale(1);
+  }
 }
-.welcome-header img {
-  vertical-align: middle;
-  margin-right: 0.5rem;
-  width:5rem;
-  height:5rem;
-  filter: grayscale(40%);
-  transition: all 0.3s ease-in-out;
+
+/* Alternative: Side indicator bar for unread messages */
+.conversation-card.has-unread::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60%;
+  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 8px rgba(255, 107, 107, 0.4);
+  animation: newMessageGlow 2s infinite;
 }
-.welcome-header img:hover {
-  transform: scale(1.1);
-  filter: grayscale(0%);
+
+@keyframes newMessageGlow {
+  0%, 100% { 
+    opacity: 0.8;
+    box-shadow: 0 0 8px rgba(255, 107, 107, 0.4);
+  }
+  50% { 
+    opacity: 1;
+    box-shadow: 0 0 16px rgba(255, 107, 107, 0.6);
+  }
 }
-.welcome-title {
-  margin-top:0.9rem;
-  font-size: 2rem;
-  font-weight: 700;
+
+/* Chat Content */
+.conversation-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.conversation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.conversation-name {
+  font-weight: 600;
+  font-size: 0.95rem;
   color: #FFFFFF;
-  margin-bottom: 0.5rem;
-  font-family: 'Inter', sans-serif;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+  transition: color 0.2s ease;
 }
 
-.user-name {
-  background: linear-gradient(45deg, #6C63FF, #00C2FF);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Make conversation name brighter when there are unread messages */
+.conversation-card.has-unread .conversation-name {
+  color: #FFFFFF;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
-.welcome-subtitle {
-  font-size: 1.2rem;
-  color: #B0B0B0;
-  font-weight: 300;
+.conversation-time {
+  font-size: 0.75rem;
+  color: #8A8AA0;
+  opacity: 0.8;
+}
+
+.conversation-preview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.last-message {
+  font-size: 0.875rem;
+  color: #B0B0C4;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  transition: all 0.2s ease;
+}
+
+/* Make last message more prominent when unread */
+.conversation-card.has-unread .last-message {
+  color: #E0E0E4;
+  opacity: 1;
+  font-weight: 500;
+}
+
+/* Updated unread badge styles */
+.unread-badge {
+  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  animation: pulse-notification 2s infinite;
+}
+
+@keyframes pulse-notification {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.conversations-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.conversations-loading .loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid #3B82F6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.conversations-loading p {
+  margin: 0;
+  font-size: 14px;
 }
 
 .search-header {
@@ -565,12 +736,6 @@ body{
   animation: pulse-notification 2s infinite;
 }
 
-@keyframes pulse-notification {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-
 .user-search-section {
   margin-bottom: 16px;
   animation: fadeIn 0.3s ease;
@@ -587,6 +752,103 @@ body{
   }
 }
 
+.messageArea {
+  min-width: 70vw;
+  height: 100vh;
+  background: radial-gradient(ellipse at top right, #0d0d1a 0%, #000000 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0; 
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background glow effect */
+.messageArea::before {
+  content: '';
+  position: absolute;
+  top: 15%;
+  right: 10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, 
+    rgba(108, 99, 255, 0.08) 0%, 
+    rgba(108, 99, 255, 0.03) 40%, 
+    transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: eclipse-orbit 8s ease-in-out infinite;
+  z-index: 0;
+}
+
+@keyframes eclipse-orbit {
+  0%, 100% { 
+    transform: translateY(0px) scale(1);
+    opacity: 0.3;
+  }
+  50% { 
+    transform: translateY(-20px) scale(1.1);
+    opacity: 0.6;
+  }
+}
+
+.welcome-container {
+  text-align: center;
+  max-width: 600px;
+  z-index: 2;
+}
+
+/* Welcome Header */
+.welcome-header {
+  margin-bottom: 3rem;
+}
+.welcome-header img {
+  vertical-align: middle;
+  margin-right: 0.5rem;
+  width:5rem;
+  height:5rem;
+  filter: grayscale(40%);
+  transition: all 0.3s ease-in-out;
+}
+.welcome-header img:hover {
+  transform: scale(1.1);
+  filter: grayscale(0%);
+}
+.welcome-title {
+  margin-top:0.9rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.user-name {
+  background: linear-gradient(45deg, #6C63FF, #00C2FF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome-subtitle {
+  font-size: 1.2rem;
+  color: #B0B0B0;
+  font-weight: 300;
+}
+
+/* Animation for new conversations only */
+@keyframes slideInConversation {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .search-toggle-btn {
@@ -596,6 +858,28 @@ body{
 
   .search-toggle-btn .material-symbols-outlined {
     font-size: 18px;
+  }
+
+  .conversation-card {
+    padding: 10px 12px;
+  }
+  
+  .conversation-avatar {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+  }
+  
+  .conversation-name {
+    font-size: 15px;
+  }
+  
+  .last-message {
+    font-size: 13px;
+  }
+  
+  .conversation-time {
+    font-size: 11px;
   }
 }
 

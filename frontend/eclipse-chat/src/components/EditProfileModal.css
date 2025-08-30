@@ -41,6 +41,10 @@
   justify-content: space-between;
   align-items: flex-start;
 }
+.header-content {
+  display: flex;
+  flex-direction: column;
+}
 
 .header-content h2 {
   font-size: 1.8rem;
@@ -56,7 +60,7 @@
 .header-content p {
   font-size: 1rem;
   color: #B0B0B0;
-  margin: 0;
+  margin-top: -1.3rem;
 }
 
 .close-btn {
@@ -372,6 +376,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-direction: column;
 }
 
 .color-picker-container input[type="color"] {
@@ -589,6 +594,7 @@
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
+  text-align: center;
 }
 
 .delete-form input {

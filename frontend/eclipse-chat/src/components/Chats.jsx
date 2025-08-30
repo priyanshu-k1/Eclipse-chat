@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 import './chats.css';
@@ -8,6 +8,7 @@ import UserMenuModal from './UserMenuModal';
 import EditProfileModal from './EditProfileModal';
 import UserSearch from './UserSearch';
 import ConnectionRequestsModal from './ConnectionRequestsModal';
+import MessageArea from './MessageArea';
 
 const Chats = () => {
   const navigate = useNavigate();
@@ -17,7 +18,16 @@ const Chats = () => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isConnectionRequestsOpen, setIsConnectionRequestsOpen] = useState(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [setShowSearch] = useState(false);
+  const [conversations, setConversations] = useState([]);
+  const [conversationsLoading, setConversationsLoading] = useState(false);
+  
+  // Track previous conversations to detect new ones and manage unread state
+  const prevConversationsRef = useRef([]);
+  const [newConversationIds, setNewConversationIds] = useState(new Set());
+  const [unreadConversations, setUnreadConversations] = useState(new Set());
+  const lastSeenMessages = useRef(new Map()); // Track last seen message for each conversation
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -46,6 +56,7 @@ const Chats = () => {
         const data = await res.json();
         setUser(data.user);
         await fetchPendingRequestsCount();
+        await fetchConversations(true); // Show loading on initial fetch
       } catch (err) {
         console.error("Verify error:", err);
         localStorage.removeItem("token");
@@ -57,6 +68,7 @@ const Chats = () => {
 
     checkAuth();
   }, [navigate]);
+
   const fetchPendingRequestsCount = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -76,6 +88,109 @@ const Chats = () => {
       console.error("Error fetching pending requests count:", error);
     }
   };
+
+  const fetchConversations = useCallback(async (showLoading = false) => {
+    try {
+      if (showLoading) {
+        setConversationsLoading(true);
+      }
+      
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5001/api/messages/conversations", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const conversationsList = data.conversations || [];
+        
+        const transformedConversations = conversationsList.map(conv => {
+          if (!conv || !conv.user) return null;
+          
+          const conversationId = `conv_${conv.user._id}`;
+          
+          return {
+            id: conversationId,
+            participants: [conv.user, user],
+            lastMessage: conv.lastMessage ? {
+              content: conv.lastMessage.content,
+              timestamp: conv.lastMessage.timestamp,
+              sender: conv.lastMessage.isFromMe ? user : conv.user,
+              messageId: conv.lastMessage._id || conv.lastMessage.id
+            } : null,
+            unreadCount: 0
+          };
+        }).filter(Boolean);
+        
+        // Create a stable comparison key for each conversation
+        const getConversationKey = (conv) => 
+          `${conv.id}-${conv.lastMessage?.messageId || 'empty'}-${conv.lastMessage?.timestamp || 0}`;
+        
+        const currentKeys = transformedConversations.map(getConversationKey).join('|');
+        const previousKeys = prevConversationsRef.current.map(getConversationKey).join('|');
+        
+        // Only update if conversations actually changed
+        if (currentKeys !== previousKeys) {
+          // Detect new conversations
+          const prevConversationIds = new Set(prevConversationsRef.current.map(c => c.id));
+          const newIds = new Set(
+            transformedConversations
+              .filter(conv => !prevConversationIds.has(conv.id))
+              .map(conv => conv.id)
+          );
+          
+          // Detect conversations with new messages
+          const newUnreadConversations = new Set(unreadConversations);
+          transformedConversations.forEach(conv => {
+            if (conv.lastMessage) {
+              const lastSeenMessageId = lastSeenMessages.current.get(conv.id);
+              const currentMessageId = conv.lastMessage.messageId;
+              
+              if (conv.lastMessage.sender?.eclipseId !== user?.eclipseId && 
+                  (!lastSeenMessageId || lastSeenMessageId !== currentMessageId)) {
+                newUnreadConversations.add(conv.id);
+              }
+            }
+          });
+
+          // Update refs and state
+          prevConversationsRef.current = transformedConversations;
+          setConversations(transformedConversations);
+          
+          if (newIds.size > 0) {
+            setNewConversationIds(newIds);
+            setTimeout(() => setNewConversationIds(new Set()), 300);
+          }
+          
+          if (newUnreadConversations.size !== unreadConversations.size || 
+              ![...newUnreadConversations].every(id => unreadConversations.has(id))) {
+            setUnreadConversations(newUnreadConversations);
+          }
+        }
+      } else {
+        console.error("Failed to fetch conversations, status:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+    } finally {
+      if (showLoading) {
+        setConversationsLoading(false);
+      }
+    }
+  }, [user, unreadConversations]);
+  useEffect(() => {
+    if (!user) return;
+
+    const conversationPolling = setInterval(() => {
+      fetchConversations(false);
+    }, 3000);
+
+    return () => clearInterval(conversationPolling);
+  }, [user]);
 
   useEffect(() => {
     window.openEditProfile = () => {
@@ -154,6 +269,7 @@ const Chats = () => {
           return { success: false, message: data.message };
         }
       }
+
       if (updateData.avatarSettings) {
         const { character, font, backgroundColor, foregroundColor, useGradient, gradientColor } = updateData.avatarSettings;
         const cleanBg = backgroundColor?.replace('#', '') || '3B82F6';
@@ -220,10 +336,155 @@ const Chats = () => {
 
   const handleUserSelect = (selectedUser) => {
     console.log('Selected user:', selectedUser);
-    // Here you can implement what happens when a user is selected
-    // For example: start a chat, add as friend, etc.
+    setSelectedUser(selectedUser);
     setShowSearch(false);
+    // Refresh conversations when a new chat is started
+    fetchConversations(false);
   };
+
+  const handleConversationSelect = useCallback((conversation) => {
+    // Find the other user from the transformed conversation structure
+    const otherUser = conversation.participants.find(
+      participant => participant && participant.eclipseId !== user?.eclipseId
+    );
+    
+    if (!otherUser) {
+      console.error('Could not find other user in conversation for selection');
+      return;
+    }
+    
+    // Mark this conversation as read
+    if (conversation.lastMessage) {
+      lastSeenMessages.current.set(conversation.id, conversation.lastMessage.messageId);
+      // Remove from unread conversations
+      setUnreadConversations(prev => {
+        const updated = new Set(prev);
+        updated.delete(conversation.id);
+        return updated;
+      });
+    }
+    
+    setSelectedUser(otherUser);
+  }, [user]);
+
+  const handleBackToChats = () => {
+    setSelectedUser(null);
+    // Refresh conversations when returning to chat list
+    fetchConversations(false);
+  };
+
+  // Function to mark conversation as read when user sends a message
+  const handleMessageSent = (recipientUser) => {
+    // Find the conversation with this user
+    const conversation = conversations.find(conv => {
+      const otherUser = conv.participants.find(p => p?.eclipseId !== user?.eclipseId);
+      return otherUser?.eclipseId === recipientUser?.eclipseId;
+    });
+    
+    if (conversation && conversation.lastMessage) {
+      lastSeenMessages.current.set(conversation.id, conversation.lastMessage.messageId);
+      setUnreadConversations(prev => {
+        const updated = new Set(prev);
+        updated.delete(conversation.id);
+        return updated;
+      });
+    }
+    
+    // Refresh conversations
+    fetchConversations(false);
+  };
+
+  const formatMessagePreview = useCallback((content) => {
+    return content.length > 50 ? content.substring(0, 50) + '...' : content;
+  }, []);
+
+  const formatLastMessageTime = useCallback((timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInMinutes = (now - date) / (1000 * 60);
+    const diffInHours = diffInMinutes / 60;
+    const diffInDays = diffInHours / 24;
+    
+    if (diffInMinutes < 1) {
+      return 'now';
+    } else if (diffInMinutes < 60) {
+      return `${Math.floor(diffInMinutes)}m`;
+    } else if (diffInHours < 24) {
+      return `${Math.floor(diffInHours)}h`;
+    } else if (diffInDays < 7) {
+      return `${Math.floor(diffInDays)}d`;
+    } else {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+  }, []);
+
+  // Memoized conversation items to prevent unnecessary re-renders
+  const conversationItems = useMemo(() => {
+    return conversations.map((conversation) => {
+      const otherUser = conversation.participants.find(
+        participant => participant && participant.eclipseId !== user?.eclipseId
+      );
+      
+      const isNewConversation = newConversationIds.has(conversation.id);
+      const hasUnreadMessages = unreadConversations.has(conversation.id);
+      
+      return {
+        ...conversation,
+        otherUser,
+        isNewConversation,
+        hasUnreadMessages,
+        isSelected: selectedUser?.eclipseId === otherUser?.eclipseId
+      };
+    });
+  }, [conversations, newConversationIds, unreadConversations, selectedUser?.eclipseId, user?.eclipseId]);
+
+  const ConversationCard = useCallback(({ conversation }) => {
+    const { otherUser, isNewConversation, hasUnreadMessages, isSelected } = conversation;
+    
+    return (
+      <div 
+        className={`conversation-card ${isSelected ? 'selected' : ''} ${isNewConversation ? 'new-conversation' : ''} ${hasUnreadMessages ? 'has-unread' : ''}`}
+        onClick={() => handleConversationSelect(conversation)}
+      >
+        <div className={`conversation-avatar ${hasUnreadMessages ? 'has-unread' : ''}`}>
+          <img 
+            src={otherUser.avatar || '/default-avatar.png'} 
+            alt={otherUser.displayName || 'User'} 
+            onError={(e) => {
+              e.target.src = '/default-avatar.png';
+            }}
+          />
+        </div>
+        <div className="conversation-details">
+          <div className="conversation-header">
+            <h4 className="conversation-name">{otherUser.displayName || 'Unknown User'}</h4>
+            <span className="conversation-time">
+              {conversation.lastMessage?.timestamp 
+                ? formatLastMessageTime(conversation.lastMessage.timestamp)
+                : ''
+              }
+            </span>
+          </div>
+          <div className="conversation-preview">
+            <p className="last-message">
+              {conversation.lastMessage?.content
+                ? (conversation.lastMessage.sender?.eclipseId === user?.eclipseId 
+                    ? `You: ${formatMessagePreview(conversation.lastMessage.content)}`
+                    : formatMessagePreview(conversation.lastMessage.content)
+                  )
+                : 'No messages yet'
+              }
+            </p>
+            {hasUnreadMessages && (
+              <span className="unread-badge">
+                •
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }, [user?.eclipseId, handleConversationSelect, formatMessagePreview, formatLastMessageTime]);
 
   if (loading) {
     return (
@@ -281,24 +542,44 @@ const Chats = () => {
                 </div>
               }
             </div>
-            <div className="contacts emptyState">
-              <img src={noContactsIllustration} alt="No Contacts Illustration" className="empty-illustration" />
-              <p className="empty-text">No one to orbit yet...</p>
-              <span className="empty-subtext">Start a new chat and grow your galaxy</span>
+            
+            {/* Conversations List */}
+            <div className="contacts">
+              {conversationsLoading ? (
+                <div className="conversations-loading">
+                  <div className="loading-spinner"></div>
+                  <p>Loading conversations...</p>
+                </div>
+              ) : conversations.length === 0 ? (
+                <div className="emptyState">
+                  <img src={noContactsIllustration} alt="No Contacts Illustration" className="empty-illustration" />
+                  <p className="empty-text">No one to orbit yet...</p>
+                  <span className="empty-subtext">Start a new chat and grow your galaxy</span>
+                </div>
+              ) : (
+                <div className="conversations-list">
+                  {conversationItems.map((conversation) => (
+                    <ConversationCard 
+                      key={`stable-${conversation.id}-${conversation.lastMessage?.messageId || 'no-msg'}`}
+                      conversation={conversation}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Message Area */}
         <div className="messageArea">
-          <div className="welcome-container">
-            <div className="welcome-header">
-              <img src={applogo} alt="Eclipse Logo" />
-              <h1 className="welcome-title">
-                Welcome back, <span className="user-name">{user?.displayName || "User"}</span>
-              </h1>
-              <p className="welcome-subtitle">Your private space awaits</p>
-            </div>
-          </div>
+          <MessageArea
+            selectedUser={selectedUser}
+            currentUser={user}
+            onBack={handleBackToChats}
+            onMessageSent={handleMessageSent} // Updated to handle unread state
+          />
         </div>
+
       </div>
 
       {/* User Menu Modal */}
