@@ -12,6 +12,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes'); 
 const orbitRoutes = require('./routes/orbitRoutes');
 const initializeSocket = require('./socket/socketHandler');
+const readStatusRoutes = require('./routes/readStatusRoutes');
 
 
 // Initialize Express app and HTTP server
@@ -32,6 +33,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
+
 // Initialize Socket.IO
 const io = initializeSocket(server);
 app.set('io', io);
@@ -48,6 +50,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes); 
 app.use('/api/orbits', orbitRoutes);
+app.use('/api/messages/read-status', readStatusRoutes);
 app.use('/api/messages', require('./routes/messageRoutes'));
 
 // Error handling middleware

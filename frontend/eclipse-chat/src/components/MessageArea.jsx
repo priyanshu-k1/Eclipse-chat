@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MessageBubble from './MessageBubble';
+import ParticlesBackground from './ParticlesBackground'; // Import the particles component
 import './MessageArea.css';
 
 const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
@@ -13,11 +14,11 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   const pollingIntervalRef = useRef(null);
   const messageExpirationTimeoutsRef = useRef(new Map());
 
+  // ... (keep all your existing functions unchanged)
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Auto-resize textarea
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -51,7 +52,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
 
     if (timeUntilExpiration > 0) {
       const timeoutId = setTimeout(() => {
-        setMessages(prevMessages => 
+        setMessages(prevMessages =>
           prevMessages.filter(msg => msg.id !== messageData.id)
         );
         messageExpirationTimeoutsRef.current.delete(messageData.id);
@@ -59,7 +60,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
 
       messageExpirationTimeoutsRef.current.set(messageData.id, timeoutId);
     } else {
-      setMessages(prevMessages => 
+      setMessages(prevMessages =>
         prevMessages.filter(msg => msg.id !== messageData.id)
       );
     }
@@ -67,7 +68,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
 
   const fetchConversation = useCallback(async () => {
     if (!selectedUser) return;
-    
+
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`http://localhost:5001/api/messages/conversation/${selectedUser.eclipseId}`, {
@@ -140,10 +141,9 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
       const targetMessage = messages.find(msg => msg.id === messageId);
       const isFromMe = targetMessage?.sender?.eclipseId === currentUser?.eclipseId;
       const isSavedByMe = isFromMe ? targetMessage?.isSavedBySender : targetMessage?.isSavedByReceiver;
-      
-      // Determine if we're saving or unsaving
+
       const endpoint = isSavedByMe ? 'unsave' : 'save';
-      
+
       const res = await fetch(`http://localhost:5001/api/messages/${endpoint}/${messageId}`, {
         method: 'PATCH',
         headers: {
@@ -154,30 +154,26 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
 
       if (res.ok) {
         const data = await res.json();
-        // Update the message in state
-        setMessages(prevMessages => 
-          prevMessages.map(msg => 
-            msg.id === messageId 
-              ? { 
-                  ...msg, 
-                  isSavedBySender: data.isSavedBySender,
-                  isSavedByReceiver: data.isSavedByReceiver,
-                  expiresAt: data.expiresAt 
-                }
+        setMessages(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id === messageId
+              ? {
+                ...msg,
+                isSavedBySender: data.isSavedBySender,
+                isSavedByReceiver: data.isSavedByReceiver,
+                expiresAt: data.expiresAt
+              }
               : msg
           )
         );
-        
-        // Handle expiration timeout based on save status
+
         if (data.isSavedBySender && data.isSavedByReceiver) {
-          // Both saved - clear expiration timeout
           const timeoutId = messageExpirationTimeoutsRef.current.get(messageId);
           if (timeoutId) {
             clearTimeout(timeoutId);
             messageExpirationTimeoutsRef.current.delete(messageId);
           }
         } else if (data.expiresAt) {
-          // Message has expiration - set up timeout
           setupMessageExpirationTimeout({
             id: messageId,
             expiresAt: data.expiresAt
@@ -195,7 +191,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    
+
     if (!message.trim() || isSending || !selectedUser) return;
 
     setIsSending(true);
@@ -208,10 +204,10 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
       recipient: selectedUser,
       isOptimistic: true
     };
-    
+
     setMessages(prev => [...prev, optimisticMessage]);
     setMessage('');
-    
+
     try {
       const token = localStorage.getItem("token");
       const res = await fetch('http://localhost:5001/api/messages/send', {
@@ -227,13 +223,13 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
       });
 
       const data = await res.json();
-      
+
       if (!res.ok) {
         setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
-        
+
         console.error('Failed to send message:', data.message);
         if (res.status === 403) {
-          alert(data.message); 
+          alert(data.message);
         } else {
           alert('Failed to send message. Please try again.');
         }
@@ -276,10 +272,10 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
-    
+
     if (diffInHours < 24) {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffInHours < 168) { 
+    } else if (diffInHours < 168) {
       const days = Math.floor(diffInHours / 24);
       return `${days}d ago`;
     } else {
@@ -310,6 +306,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   if (!selectedUser) {
     return (
       <div className="message-area-container">
+        <ParticlesBackground />
         <div className="welcome-container">
           <div className="welcome-header">
             <h1 className="welcome-title">
@@ -331,7 +328,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
           </div>
           <div className="chat-user-details">
             <h3>{selectedUser.displayName}</h3>
-            {/* <span>@{selectedUser.eclipseId}</span>  have to fix this*/}
           </div>
         </div>
         <button className="back-button" onClick={onBack}>
@@ -339,7 +335,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
         </button>
       </div>
 
-      {/* Messages Container */}
       <div className="messages-container">
         {isLoading ? (
           <div className="loading-messages">
@@ -367,13 +362,12 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
                 currentUser={currentUser}
               />
             ))}
-            
+
             <div ref={messagesEndRef} />
           </div>
         )}
       </div>
 
-      {/* Message Input */}
       <div className="message-input-container">
         <form onSubmit={handleSendMessage} className="message-form">
           <div className="input-wrapper">
@@ -387,8 +381,8 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
               rows="1"
               disabled={isSending}
             />
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className={`send-button ${message.trim() && !isSending ? 'active' : ''}`}
               disabled={!message.trim() || isSending}
             >
@@ -404,5 +398,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     </div>
   );
 };
+
+
 
 export default MessageArea;

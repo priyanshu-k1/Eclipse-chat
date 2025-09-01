@@ -23,11 +23,11 @@ const Chats = () => {
   const [conversations, setConversations] = useState([]);
   const [conversationsLoading, setConversationsLoading] = useState(false);
   
-  // Track previous conversations to detect new ones and manage unread state
+  // Enhanced read status tracking
+  const [readStatusMap, setReadStatusMap] = useState(new Map());
   const prevConversationsRef = useRef([]);
   const [newConversationIds, setNewConversationIds] = useState(new Set());
   const [unreadConversations, setUnreadConversations] = useState(new Set());
-  const lastSeenMessages = useRef(new Map()); // Track last seen message for each conversation
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -56,7 +56,8 @@ const Chats = () => {
         const data = await res.json();
         setUser(data.user);
         await fetchPendingRequestsCount();
-        await fetchConversations(true); // Show loading on initial fetch
+        await fetchReadStatus(); 
+        await fetchConversations(true);
       } catch (err) {
         console.error("Verify error:", err);
         localStorage.removeItem("token");
@@ -68,6 +69,64 @@ const Chats = () => {
 
     checkAuth();
   }, [navigate]);
+
+  // Fetch read status from server
+  const fetchReadStatus = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5001/api/messages/read-status", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const statusMap = new Map();
+        
+        Object.entries(data.readStatus || {}).forEach(([conversationId, status]) => {
+          statusMap.set(conversationId, status);
+        });
+        
+        setReadStatusMap(statusMap);
+      }
+    } catch (error) {
+      console.error("Error fetching read status:", error);
+    }
+  };
+  const updateReadStatus = async (eclipseId, messageId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5001/api/messages/read-status", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          eclipseId,
+          messageId
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setReadStatusMap(prev => {
+          const updated = new Map(prev);
+          updated.set(data.readStatus.conversationId, {
+            lastSeenMessageId: data.readStatus.lastSeenMessageId,
+            lastSeenAt: data.readStatus.lastSeenAt,
+            conversationWith: data.readStatus.conversationWith
+          });
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.error("Error updating read status:", error);
+    }
+  };
 
   const fetchPendingRequestsCount = async () => {
     try {
@@ -125,39 +184,31 @@ const Chats = () => {
             unreadCount: 0
           };
         }).filter(Boolean);
-        
-        // Create a stable comparison key for each conversation
         const getConversationKey = (conv) => 
           `${conv.id}-${conv.lastMessage?.messageId || 'empty'}-${conv.lastMessage?.timestamp || 0}`;
         
         const currentKeys = transformedConversations.map(getConversationKey).join('|');
         const previousKeys = prevConversationsRef.current.map(getConversationKey).join('|');
-        
-        // Only update if conversations actually changed
         if (currentKeys !== previousKeys) {
-          // Detect new conversations
           const prevConversationIds = new Set(prevConversationsRef.current.map(c => c.id));
           const newIds = new Set(
             transformedConversations
               .filter(conv => !prevConversationIds.has(conv.id))
               .map(conv => conv.id)
           );
-          
-          // Detect conversations with new messages
-          const newUnreadConversations = new Set(unreadConversations);
+        
+          const newUnreadConversations = new Set();
           transformedConversations.forEach(conv => {
             if (conv.lastMessage) {
-              const lastSeenMessageId = lastSeenMessages.current.get(conv.id);
+              const readStatus = readStatusMap.get(conv.id);
+              const lastSeenMessageId = readStatus?.lastSeenMessageId;
               const currentMessageId = conv.lastMessage.messageId;
-              
               if (conv.lastMessage.sender?.eclipseId !== user?.eclipseId && 
                   (!lastSeenMessageId || lastSeenMessageId !== currentMessageId)) {
                 newUnreadConversations.add(conv.id);
               }
             }
           });
-
-          // Update refs and state
           prevConversationsRef.current = transformedConversations;
           setConversations(transformedConversations);
           
@@ -165,11 +216,7 @@ const Chats = () => {
             setNewConversationIds(newIds);
             setTimeout(() => setNewConversationIds(new Set()), 300);
           }
-          
-          if (newUnreadConversations.size !== unreadConversations.size || 
-              ![...newUnreadConversations].every(id => unreadConversations.has(id))) {
-            setUnreadConversations(newUnreadConversations);
-          }
+          setUnreadConversations(newUnreadConversations);
         }
       } else {
         console.error("Failed to fetch conversations, status:", response.status);
@@ -181,16 +228,17 @@ const Chats = () => {
         setConversationsLoading(false);
       }
     }
-  }, [user, unreadConversations]);
+  }, [user, readStatusMap]);
   useEffect(() => {
     if (!user) return;
 
     const conversationPolling = setInterval(() => {
       fetchConversations(false);
+      fetchReadStatus();
     }, 3000);
 
     return () => clearInterval(conversationPolling);
-  }, [user]);
+  }, [user, fetchConversations]);
 
   useEffect(() => {
     window.openEditProfile = () => {
@@ -215,14 +263,12 @@ const Chats = () => {
     setIsMenuOpen(false);
   };
 
-  // Add function to handle connection requests modal
   const handleConnectionRequestsToggle = () => {
     setIsConnectionRequestsOpen(!isConnectionRequestsOpen);
   };
 
   const handleCloseConnectionRequests = () => {
     setIsConnectionRequestsOpen(false);
-    // Refresh the pending requests count when modal is closed
     fetchPendingRequestsCount();
   };
 
@@ -306,7 +352,6 @@ const Chats = () => {
     }
   };
 
-  // Handle account deletion
   const handleDeleteAccount = async (password) => {
     try {
       const token = localStorage.getItem("token");
@@ -338,12 +383,10 @@ const Chats = () => {
     console.log('Selected user:', selectedUser);
     setSelectedUser(selectedUser);
     setShowSearch(false);
-    // Refresh conversations when a new chat is started
     fetchConversations(false);
   };
 
-  const handleConversationSelect = useCallback((conversation) => {
-    // Find the other user from the transformed conversation structure
+  const handleConversationSelect = useCallback(async (conversation) => {
     const otherUser = conversation.participants.find(
       participant => participant && participant.eclipseId !== user?.eclipseId
     );
@@ -352,11 +395,8 @@ const Chats = () => {
       console.error('Could not find other user in conversation for selection');
       return;
     }
-    
-    // Mark this conversation as read
-    if (conversation.lastMessage) {
-      lastSeenMessages.current.set(conversation.id, conversation.lastMessage.messageId);
-      // Remove from unread conversations
+    if (conversation.lastMessage && conversation.lastMessage.sender?.eclipseId !== user?.eclipseId) {
+      await updateReadStatus(otherUser.eclipseId, conversation.lastMessage.messageId);
       setUnreadConversations(prev => {
         const updated = new Set(prev);
         updated.delete(conversation.id);
@@ -369,29 +409,64 @@ const Chats = () => {
 
   const handleBackToChats = () => {
     setSelectedUser(null);
-    // Refresh conversations when returning to chat list
     fetchConversations(false);
   };
-
-  // Function to mark conversation as read when user sends a message
-  const handleMessageSent = (recipientUser) => {
-    // Find the conversation with this user
+  const handleMessageSent = async (recipientUser) => {
     const conversation = conversations.find(conv => {
       const otherUser = conv.participants.find(p => p?.eclipseId !== user?.eclipseId);
       return otherUser?.eclipseId === recipientUser?.eclipseId;
     });
     
     if (conversation && conversation.lastMessage) {
-      lastSeenMessages.current.set(conversation.id, conversation.lastMessage.messageId);
+      await updateReadStatus(recipientUser.eclipseId, conversation.lastMessage.messageId);
       setUnreadConversations(prev => {
         const updated = new Set(prev);
         updated.delete(conversation.id);
         return updated;
       });
     }
-    
-    // Refresh conversations
     fetchConversations(false);
+  };
+  const markAllAsRead = async () => {
+    try {
+      const unreadConvs = conversations.filter(conv => unreadConversations.has(conv.id));
+      
+      if (unreadConvs.length === 0) return;
+
+      const updates = unreadConvs.map(conv => {
+        const otherUser = conv.participants.find(p => p?.eclipseId !== user?.eclipseId);
+        return {
+          eclipseId: otherUser.eclipseId,
+          messageId: conv.lastMessage.messageId
+        };
+      }).filter(update => update.eclipseId && update.messageId);
+
+      if (updates.length > 0) {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:5001/api/messages/read-status/batch", {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ updates }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setReadStatusMap(prev => {
+            const updated = new Map(prev);
+            Object.entries(data.readStatus || {}).forEach(([conversationId, status]) => {
+              updated.set(conversationId, status);
+            });
+            return updated;
+          });
+          setUnreadConversations(new Set());
+        }
+      }
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+    }
   };
 
   const formatMessagePreview = useCallback((content) => {
@@ -417,8 +492,6 @@ const Chats = () => {
       return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
   }, []);
-
-  // Memoized conversation items to prevent unnecessary re-renders
   const conversationItems = useMemo(() => {
     return conversations.map((conversation) => {
       const otherUser = conversation.participants.find(
@@ -426,7 +499,14 @@ const Chats = () => {
       );
       
       const isNewConversation = newConversationIds.has(conversation.id);
-      const hasUnreadMessages = unreadConversations.has(conversation.id);
+      let hasUnreadMessages = false;
+      if (conversation.lastMessage && conversation.lastMessage.sender?.eclipseId !== user?.eclipseId) {
+        const readStatus = readStatusMap.get(conversation.id);
+        const lastSeenMessageId = readStatus?.lastSeenMessageId;
+        const currentMessageId = conversation.lastMessage.messageId;
+        
+        hasUnreadMessages = !lastSeenMessageId || lastSeenMessageId !== currentMessageId;
+      }
       
       return {
         ...conversation,
@@ -436,7 +516,10 @@ const Chats = () => {
         isSelected: selectedUser?.eclipseId === otherUser?.eclipseId
       };
     });
-  }, [conversations, newConversationIds, unreadConversations, selectedUser?.eclipseId, user?.eclipseId]);
+  }, [conversations, newConversationIds, readStatusMap, selectedUser?.eclipseId, user?.eclipseId]);
+  const totalUnreadCount = useMemo(() => {
+    return conversationItems.filter(conv => conv.hasUnreadMessages).length;
+  }, [conversationItems]);
 
   const ConversationCard = useCallback(({ conversation }) => {
     const { otherUser, isNewConversation, hasUnreadMessages, isSelected } = conversation;
@@ -454,10 +537,15 @@ const Chats = () => {
               e.target.src = '/default-avatar.png';
             }}
           />
+          {hasUnreadMessages && (
+            <div className="unread-indicator"></div>
+          )}
         </div>
         <div className="conversation-details">
           <div className="conversation-header">
-            <h4 className="conversation-name">{otherUser.displayName || 'Unknown User'}</h4>
+            <h4 className={`conversation-name ${hasUnreadMessages ? 'unread-name' : ''}`}>
+              {otherUser.displayName || 'Unknown User'}
+            </h4>
             <span className="conversation-time">
               {conversation.lastMessage?.timestamp 
                 ? formatLastMessageTime(conversation.lastMessage.timestamp)
@@ -466,7 +554,8 @@ const Chats = () => {
             </span>
           </div>
           <div className="conversation-preview">
-            <p className="last-message">
+            <p className={`last-message ${hasUnreadMessages ? 'unread-message' : ''}`}>
+              <i className="ph ph-chat-circle-dots"></i>
               {conversation.lastMessage?.content
                 ? (conversation.lastMessage.sender?.eclipseId === user?.eclipseId 
                     ? `You: ${formatMessagePreview(conversation.lastMessage.content)}`
@@ -524,8 +613,24 @@ const Chats = () => {
           <div className="chats">
             <div className="searchArea">
               <div className="search-header">
-                <h3>Chats</h3>
+                <div className="chat-header-left">
+                  <h3>Chats</h3>
+                  {totalUnreadCount > 0 && (
+                    <span className="total-unread-badge">
+                      <i class="ph ph-broadcast"></i> Orbital Pings: {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+                    </span>
+                  )}
+                </div>
                 <div className="interactionButtons">
+                  {totalUnreadCount > 0 && (
+                    <button 
+                      className="mark-all-read-btn"
+                      onClick={markAllAsRead}
+                      title="Mark all as read"
+                    >
+                    <span class="material-symbols-outlined">mark_chat_read</span>
+                    </button>
+                  )}
                   <div className="connection-request-div" onClick={handleConnectionRequestsToggle}>
                     {pendingRequestsCount > 0 && (
                       <span className="notification-badge">
@@ -536,11 +641,9 @@ const Chats = () => {
                   </div>
                 </div>
               </div>
-              {
-                <div className="user-search-section">
-                  <UserSearch onUserSelect={handleUserSelect} />
-                </div>
-              }
+              <div className="user-search-section">
+                <UserSearch onUserSelect={handleUserSelect} />
+              </div>
             </div>
             
             {/* Conversations List */}
@@ -576,7 +679,8 @@ const Chats = () => {
             selectedUser={selectedUser}
             currentUser={user}
             onBack={handleBackToChats}
-            onMessageSent={handleMessageSent} // Updated to handle unread state
+            onMessageSent={handleMessageSent}
+            onMessageRead={(eclipseId, messageId) => updateReadStatus(eclipseId, messageId)}
           />
         </div>
 

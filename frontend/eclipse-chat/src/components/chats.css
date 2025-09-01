@@ -447,9 +447,26 @@ body{
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 0 16px;
+  padding: 0 9px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #6C63FF rgba(108, 99, 255, 0.1);
   max-height: calc(100vh - 200px);
+  padding-bottom: 1rem;
+}
+.conversations-list::-webkit-scrollbar {
+  width: 8px;
+}
+.conversations-list::-webkit-scrollbar-track {
+  background: rgba(108, 99, 255, 0.1) !important;
+  border-radius: 2px;
+}
+.conversations-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #6C63FF, #00C2FF);
+  border-radius: 2px;
+}
+.conversations-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #8A2BE2, #6C63FF);
 }
 
 .conversation-card {
@@ -465,6 +482,8 @@ body{
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
+  min-height: fit-content !important;
+
 }
 
 /* Remove the automatic slide-in animation */
@@ -489,8 +508,9 @@ body{
 }
 
 .conversation-avatar {
-  width: 48px;
-  height: 48px;
+  margin-top:-0.8rem;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
@@ -500,6 +520,7 @@ body{
 }
 
 .conversation-avatar img {
+
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -575,7 +596,21 @@ body{
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+.conversation-details::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(74, 66, 222, 0.594), transparent);
+  transition: left 0.6s ease;
+}
+.conversation-details:hover::before {
+  left: 100%;
 }
 
 .conversation-header {
@@ -586,7 +621,7 @@ body{
 
 .conversation-name {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: #FFFFFF;
   text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
   transition: color 0.2s ease;
@@ -619,6 +654,10 @@ body{
   text-overflow: ellipsis;
   max-width: 200px;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+
 }
 
 /* Make last message more prominent when unread */
@@ -688,10 +727,55 @@ body{
   align-items: center;
   margin-bottom: 16px;
 }
+
+.total-unread-badge{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap:0.2rem;
+  font-size: 0.7rem;
+  height: auto;
+  padding:0.5rem 0.7rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.1));
+  color: #6EE7B7;
+  border-radius:30px;
+  box-shadow: 0 0 10px rgba(80, 186, 124, 0.5);
+  cursor: pointer;
+}
+.total-unread-badge i {
+  font-size: 1rem;
+  animation: signalPulse 1s infinite;
+  
+}
+@keyframes signalPulse{
+  0%,100% { color:White; }
+  50% { color: #10B981; }
+}
 .interactionButtons{
   display: flex;
   gap: 1rem;
   flex-direction: row;
+}
+.mark-all-read-btn{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  border-radius: 10px;
+  background: rgba(108, 99, 255, 0.15);
+  border: 1px solid rgba(108, 99, 255, 0.2);
+  transition: all 0.3s ease-in-out;
+}
+.mark-all-read-btn span {
+  font-size: 18px;
+  color: #8A2BE2;
+}
+.mark-all-read-btn:hover {
+  background: rgba(108, 99, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 99, 255, 0.2);
 }
 .connection-request-div, .new-chat-btn {
   display: flex;
@@ -703,7 +787,7 @@ body{
   background: rgba(108, 99, 255, 0.15);
   border-radius: 10px;
   position: relative;
-  transition: all 0.3s ease;
+  transition: all 0.3s ease-in-out;
   border: 1px solid rgba(108, 99, 255, 0.2);
 }
 
@@ -901,3 +985,4 @@ body{
     min-width: 65vw;
   }
 }
+

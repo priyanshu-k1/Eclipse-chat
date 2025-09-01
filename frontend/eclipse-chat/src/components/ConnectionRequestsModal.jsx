@@ -141,7 +141,6 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
     
     try {
       const token = localStorage.getItem("token");
-      // Fixed: Pass the user ID (not orbit ID) to match your backend logic
       const response = await fetch(`http://localhost:5001/api/orbits/remove-connection/${userId}`, {
         method: "DELETE",
         headers: {
@@ -151,7 +150,6 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
       });
 
       if (response.ok) {
-        // Remove the connection from the state by filtering out the connection with matching user ID
         setConnections(prev => prev.filter(conn => conn.user.id !== userId));
         console.log("Connection removed successfully");
       } else {
@@ -164,6 +162,14 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
       setActionLoading(prev => ({ ...prev, [userId]: false }));
     }
   };
+
+  // const handleOpenChat = (user) => {
+  //   onClose(); // Close the modal first
+  //   if (onUserSelect) {
+  //     onUserSelect(user); // Open chat with the selected user
+  //   }
+  // };
+
   const getInitials = (displayName) => {
     if (!displayName) return "?";
     return displayName
@@ -177,8 +183,8 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
   const renderTabContent = () => {
     if (loading) {
       return (
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
+        <div className="cosmic-loading">
+          <div className="nebula-spinner"></div>
           <p>Loading cosmic data...</p>
         </div>
       );
@@ -199,8 +205,8 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
   const renderPendingRequests = () => {
     if (!Array.isArray(pendingRequests) || pendingRequests.length === 0) {
       return (
-        <div className="empty-state">
-          <div className="empty-icon">
+        <div className="void-state">
+          <div className="void-icon">
             <i className="ph ph-shooting-star"></i>
           </div>
           <h3>No Incoming Signals</h3>
@@ -210,50 +216,50 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
     }
 
     return (
-      <div className="requests-list">
+      <div className="stellar-list">
         {pendingRequests.map((request) => {
           const sender = request?.sender || {};
           const requestId = request?.id || Math.random().toString();
           
           return (
-            <div key={requestId} className="request-item">
-              <div className="request-user">
-                <div className="user-avatar">
+            <div key={requestId} className="orbit-item">
+              <div className="stellar-user">
+                <div className="stellar-avatar">
                   {sender.avatar ? (
                     <img src={sender.avatar} alt={sender.displayName || 'User'} />
                   ) : (
-                    <span className="avatar-initials">
+                    <span className="stellar-initials">
                       {getInitials(sender.displayName)}
                     </span>
                   )}
                 </div>
-                <div className="user-info">
+                <div className="stellar-user-data">
                   <h4 className="user-name">{sender.displayName || 'Unknown User'}</h4>
                   <p className="user-id">@{sender.eclipseId || 'unknown'}</p>
                 </div>
               </div>
               
-              <div className="request-actions">
+              <div className="stellar-actions">
                 <button
-                  className="action-btn reject-btn"
+                  className="stellar-btn stellar-reject"
                   onClick={() => handleRequestAction(requestId, 'deny')}
                   disabled={actionLoading[requestId]}
                   title="Reject request"
                 >
                   {actionLoading[requestId] === 'deny' ? (
-                    <div className="btn-spinner"></div>
+                    <div className="stellar-spinner"></div>
                   ) : (
                     <i className="ph ph-x"></i>
                   )}
                 </button>
                 <button
-                  className="action-btn accept-btn"
+                  className="stellar-btn stellar-accept"
                   onClick={() => handleRequestAction(requestId, 'accept')}
                   disabled={actionLoading[requestId]}
                   title="Accept request"
                 >
                   {actionLoading[requestId] === 'accept' ? (
-                    <div className="btn-spinner"></div>
+                    <div className="stellar-spinner"></div>
                   ) : (
                     <i className="ph ph-check"></i>
                   )}
@@ -269,8 +275,8 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
  const renderConnections = () => {
   if (!Array.isArray(connections) || connections.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-icon">
+      <div className="void-state">
+        <div className="void-icon">
           <i className="ph ph-moon-stars"></i>
         </div>
         <h3>No Stellar Companions</h3>
@@ -280,46 +286,51 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
   }
 
   return (
-    <div className="requests-list">
+    <div className="stellar-list">
       {connections.map((connection) => {
         const user = connection.user || {};
         const userId =  user.id;
         return (
-          <div key={userId} className="request-item">
-            <div className="request-user">
-              <div className="user-avatar">
+          <div key={userId} className="orbit-item">
+            <div className="stellar-user">
+              <div className="stellar-avatar">
                 {user.avatar ? (
                   <img src={user.avatar} alt={user.displayName || 'User'} />
                 ) : (
-                  <span className="avatar-initials">
+                  <span className="stellar-initials">
                     {getInitials(user.displayName)}
                   </span>
                 )}
+                <div className="stellar-status"></div>
               </div>
-              <div className="user-info">
+              <div className="stellar-user-data">
                 <h4 className="user-name">{user.displayName || 'Unknown User'}</h4>
                 <p className="user-id">@{user.eclipseId || 'unknown'}</p>
               </div>
             </div>
 
-            <div className="status-badge status-connected">Connected</div>
+            <div className="stellar-badge badge-connected">Connected</div>
 
-            <div className="request-actions">
+            <div className="stellar-actions">
               <button
-                className="action-btn remove-btn"
-                onClick={() => handleRemoveConnection(userId)} // ✅ orbit id
+                className="stellar-btn stellar-remove"
+                onClick={() => handleRemoveConnection(userId)} 
                 disabled={actionLoading[userId]}
                 title="Remove connection"
               >
                 {actionLoading[userId] === 'remove' ? (
-                  <div className="btn-spinner"></div>
+                  <div className="stellar-spinner"></div>
                 ) : (
                   <i className="ph ph-user-minus"></i>
                 )}
               </button>
-              <button className="action-btn message-btn" title="Send message">
+              {/* <button 
+                className="stellar-btn stellar-message" 
+                title="Send message"
+                onClick={() => handleOpenChat(user)}
+              >
                 <i className="ph ph-chat-circle"></i>
-              </button>
+              </button> */}
             </div>
           </div>
         );
@@ -332,8 +343,8 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
   const renderDeniedRequests = () => {
     if (!Array.isArray(deniedRequests) || deniedRequests.length === 0) {
       return (
-        <div className="empty-state">
-          <div className="empty-icon">
+        <div className="void-state">
+          <div className="void-icon">
            <i class="ph ph-alien"></i>
           </div>
           <h3>No Rejected Signals</h3>
@@ -343,30 +354,30 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
     }
 
     return (
-      <div className="requests-list">
+      <div className="stellar-list">
         {deniedRequests.map((request) => {
           const sender = request?.sender || {};
           const requestId = request?.id || Math.random().toString();
           
           return (
-            <div key={requestId} className="request-item">
-              <div className="request-user">
-                <div className="user-avatar">
+            <div key={requestId} className="orbit-item">
+              <div className="stellar-user">
+                <div className="stellar-avatar">
                   {sender.avatar ? (
                     <img src={sender.avatar} alt={sender.displayName || 'User'} />
                   ) : (
-                    <span className="avatar-initials">
+                    <span className="stellar-initials">
                       {getInitials(sender.displayName)}
                     </span>
                   )}
                 </div>
-                <div className="user-info">
+                <div className="stellar-user-data">
                   <h4 className="user-name">{sender.displayName || 'Unknown User'}</h4>
                   <p className="user-id">@{sender.eclipseId || 'unknown'}</p>
                 </div>
               </div>
               
-              <div className="status-badge status-denied">
+              <div className="stellar-badge badge-denied">
                 Rejected
               </div>
             </div>
@@ -395,66 +406,66 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="connection-modal-overlay" onClick={onClose}>
-      <div className="connection-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="cosmic-overlay" onClick={onClose}>
+      <div className="stellar-modal" onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
-        <div className="connection-modal-header">
-          <div className="header-content">
-            <div className="header-icon">
+        <div className="stellar-header">
+          <div className="stellar-header-content">
+            <div className="stellar-icon-container">
               <i className="ph ph-planet"></i>
             </div>
-            <div className="header-text">
+            <div className="stellar-title-section">
               <h2>Cosmic Network</h2>
               <p>Manage your stellar connections</p>
             </div>
           </div>
-          <button className="close-button" onClick={onClose}>
+          <button className="stellar-close-btn" onClick={onClose}>
             <i className="ph ph-x"></i>
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="tab-navigation">
+        <div className="stellar-navigation">
           <button
-            className={`tab-button ${activeTab === 'pending' ? 'active' : ''}`}
+            className={`stellar-tab ${activeTab === 'pending' ? 'active' : ''}`}
             onClick={() => setActiveTab('pending')}
           >
             <i className="ph ph-radio"></i>
             <span>Incoming Signals</span>
             {Array.isArray(pendingRequests) && pendingRequests.length > 0 && (
-              <span className="tab-count">{pendingRequests.length}</span>
+              <span className="stellar-count">{pendingRequests.length}</span>
             )}
           </button>
           <button
-            className={`tab-button ${activeTab === 'constellation' ? 'active' : ''}`}
+            className={`stellar-tab ${activeTab === 'constellation' ? 'active' : ''}`}
             onClick={() => setActiveTab('constellation')}
           >
             <i className="ph ph-star"></i>
             <span>Constellation</span>
             {Array.isArray(connections) && connections.length > 0 && (
-              <span className="tab-count">{connections.length}</span>
+              <span className="stellar-count">{connections.length}</span>
             )}
           </button>
           <button
-            className={`tab-button ${activeTab === 'blackhole' ? 'active' : ''}`}
+            className={`stellar-tab ${activeTab === 'blackhole' ? 'active' : ''}`}
             onClick={() => setActiveTab('blackhole')}
           >
             <i className="ph ph-prohibit"></i>
             <span>dwarf planet</span>
             {Array.isArray(deniedRequests) && deniedRequests.length > 0 && (
-              <span className="tab-count">{deniedRequests.length}</span>
+              <span className="stellar-count">{deniedRequests.length}</span>
             )}
           </button>
         </div>
 
         {/* Modal Content */}
-        <div className="connection-modal-content">
+        <div className="stellar-content">
           {renderTabContent()}
         </div>
 
         {/* Modal Footer */}
-        <div className="connection-modal-footer">
-          <p className="footer-text">
+        <div className="stellar-footer">
+          <p className="stellar-footer-text">
             {getFooterText()}
           </p>
         </div>

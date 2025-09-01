@@ -147,7 +147,6 @@ const UserSearch = ({ onUserSelect }) => {
     if (onUserSelect) {
       onUserSelect(user);
     }
-    // Placeholder for chat opening functionality
     showToast(`Opening chat with ${user.displayName}`, 'info');
   };
 
@@ -157,7 +156,6 @@ const UserSearch = ({ onUserSelect }) => {
 
     const currentState = userStates[user.id];
     if (currentState === 'friends' || currentState === 'pending_sent' || requestLoadingStates[user.id]) {
-      console.log('Request blocked - current state:', currentState);
       return;
     }
 
@@ -302,7 +300,7 @@ const UserSearch = ({ onUserSelect }) => {
           <input
             type="text"
             className="search-input"
-            placeholder="Search users by Eclipse ID..."
+            placeholder="Search travelers by Eclipse ID..."
             value={query}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}

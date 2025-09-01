@@ -91,7 +91,10 @@ const UserMenuModal = ({ isOpen, onClose, user, onLogout, onDeleteAccount }) => 
                   <div className="status-indicator"></div>
                   <div className="user-details">
                     <h3 className="user-display-name">{user?.displayName || "User"}</h3>
-                    <p className="modal-user-name">{user?.eclipseId || "Celestial ID"} <i className="ph ph-clipboard" title='Copy to clipboard'  onClick={() => navigator.clipboard.writeText(user?.eclipseId || "NULL")}></i></p>
+                    <div className="user-clipboard">
+                      <p className="modal-user-name">{user?.eclipseId || "Celestial ID"} </p>
+                      <i className="ph ph-clipboard" title='Copy to clipboard'  onClick={() => navigator.clipboard.writeText(user?.eclipseId || "NULL")}></i>
+                    </div>
                 </div>
                 </div>
               </div>
