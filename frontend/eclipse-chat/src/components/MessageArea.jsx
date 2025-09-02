@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+
+
 import MessageBubble from './MessageBubble';
-import ParticlesBackground from './ParticlesBackground'; // Import the particles component
+import ParticlesBackground from './ParticlesBackground';
 import './MessageArea.css';
+import backgroundDoodle from '../assets/chat-background-doodle.svg';
 
 const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   const [message, setMessage] = useState('');
@@ -14,22 +17,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   const pollingIntervalRef = useRef(null);
   const messageExpirationTimeoutsRef = useRef(new Map());
 
-  // ... (keep all your existing functions unchanged)
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const adjustTextareaHeight = () => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
-    }
-  };
-
-  useEffect(() => {
-    adjustTextareaHeight();
-  }, [message]);
 
   const isMessageExpired = (messageData) => {
     if (!messageData.expiresAt) return false;
@@ -130,9 +117,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     return () => clearInterval(cleanupInterval);
   }, [removeExpiredMessages]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+
 
   const handleSaveMessage = async (messageId) => {
     console.log(messageId)
@@ -306,7 +291,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   if (!selectedUser) {
     return (
       <div className="message-area-container">
-        <ParticlesBackground />
+        {/* <ParticlesBackground /> */}
         <div className="welcome-container">
           <div className="welcome-header">
             <h1 className="welcome-title">
@@ -320,7 +305,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   }
 
   return (
-    <div className="message-area-container">
+    <div className="message-area-container" style={{backgroundImage: `url(${backgroundDoodle})`}}>
       <div className="chat-header">
         <div className="chat-user-info">
           <div className="chat-avatar">

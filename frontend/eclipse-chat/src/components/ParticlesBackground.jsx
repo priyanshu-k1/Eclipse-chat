@@ -1,72 +1,118 @@
-import React from 'react';
-import './ParticlesBackground.css';
+import { useEffect, useMemo, useState } from "react";
+import Particles, { initParticlesEngine } from "@tsparticles/react";
+import { loadFull } from "tsparticles";
 
 const ParticlesBackground = () => {
-  // Generate particles data for animation
-  const particles = Array.from({ length: 50 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 3 + 1,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    animationDelay: Math.random() * 4,
-    animationDuration: Math.random() * 3 + 2,
-    opacity: Math.random() * 0.6 + 0.2
-  }));
+  const [init, setInit] = useState(false);
 
-  return (
-    <div className="particles-container">
-      {particles.map((particle) => (
-        <div
-          key={particle.id}
-          className="particle"
+  useEffect(() => {
+    initParticlesEngine(async (engine) => {
+      await loadFull(engine); 
+    }).then(() => {
+      setInit(true);
+    });
+  }, []);
+
+  const options = useMemo(
+    () => ({
+      preset: "nasa",
+      background: {
+        color: {
+          value: "transparent", 
+        },
+      },
+      fullScreen: {
+        enable: true,
+        zIndex: -1,
+      },
+      fpsLimit: 120,
+      interactivity: {
+        events: {
+          onClick: {
+            enable: true,
+            mode: "push",
+          },
+          onHover: {
+            enable: true,
+            mode: "repulse",
+          },
+        },
+        modes: {
+          push: {
+            quantity: 4,
+          },
+          repulse: {
+            distance: 200,
+            duration: 0.4,
+          },
+        },
+      },
+      particles: {
+        color: {
+          value: "#4125e390",
+        },
+        links: {
+          color: "#f9f9f9e7",
+          distance: 150,
+          enable: true,
+          opacity: 0.3,
+          width: 1,
+        },
+        move: {
+          direction: "none",
+          enable: true,
+          outModes: {
+            default: "bounce",
+          },
+          random: true,
+          speed: 3,
+          straight: false,
+        },
+        number: {
+          density: {
+            enable: true,
+          },
+          value: 350,
+        },
+        opacity: {
+          value: 0.3, 
+        },
+        shape: {
+          type: ["circle", "triangle", "square", "pentagon"],
+        },
+        size: {
+          value: { min: 3, max: 5 }, 
+        },
+      },
+      detectRetina: true,
+    }),
+    [],
+  );
+
+  if (init) {
+    return (
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+      overflow: 'hidden !important',
+        zIndex: 1,
+        pointerEvents: 'none',
+      }}>
+        <Particles
+          id="tsparticles"
+          options={options}
           style={{
-            left: `${particle.x}%`,
-            top: `${particle.y}%`,
-            width: `${particle.size}px`,
-            height: `${particle.size}px`,
-            animationDelay: `${particle.animationDelay}s`,
-            animationDuration: `${particle.animationDuration}s`,
-            opacity: particle.opacity
+            width: '100%',
+            height: '100%',
           }}
         />
-      ))}
-      
-      {/* Connection lines */}
-      <div className="connections">
-        {Array.from({ length: 8 }, (_, i) => (
-          <div
-            key={i}
-            className="connection-line"
-            style={{
-              left: `${Math.random() * 80 + 10}%`,
-              top: `${Math.random() * 80 + 10}%`,
-              width: `${Math.random() * 100 + 50}px`,
-              transform: `rotate(${Math.random() * 360}deg)`,
-              animationDelay: `${Math.random() * 2}s`
-            }}
-          />
-        ))}
       </div>
+    );
+  }
 
-      {/* Floating orbs */}
-      <div className="floating-orbs">
-        {Array.from({ length: 5 }, (_, i) => (
-          <div
-            key={i}
-            className={`orb orb-${i + 1}`}
-            style={{
-              left: `${Math.random() * 90 + 5}%`,
-              top: `${Math.random() * 90 + 5}%`,
-              animationDelay: `${Math.random() * 3}s`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Gradient overlay */}
-      <div className="gradient-overlay" />
-    </div>
-  );
 };
 
 export default ParticlesBackground;

@@ -1,0 +1,97 @@
+<svg width="100%" height="100%" viewBox="0 0 800 1200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <style>
+      .doodle {
+        stroke-width: 2;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    </style>
+    
+    <symbol id="doodle-planet" viewBox="-15 -15 30 30">
+      <circle class="doodle" cx="0" cy="0" r="10"/>
+      <ellipse class="doodle" cx="0" cy="0" rx="14" ry="5" transform="rotate(-20)"/>
+    </symbol>
+    <symbol id="doodle-rocket" viewBox="-15 -15 30 30">
+      <path class="doodle" d="M 0 -12 C 5 -8 5 8 0 12 C -5 8 -5 -8 0 -12 Z"/>
+      <path class="doodle" d="M -5 8 L -8 12 L 0 9 L 8 12 L 5 8"/>
+      <circle class="doodle" cx="0" cy="0" r="3"/>
+    </symbol>
+    <symbol id="doodle-star4" viewBox="-10 -10 20 20">
+      <path class="doodle" d="M 0 -8 L 0 8 M -8 0 L 8 0"/>
+    </symbol>
+    <symbol id="doodle-moon" viewBox="-10 -10 20 20">
+        <path class="doodle" d="M 5 8 A 8 8 0 1 0 5 -8 A 6 6 0 1 1 5 8 Z"/>
+    </symbol>
+    <symbol id="doodle-lock" viewBox="-12 -12 24 24">
+      <rect class="doodle" x="-7" y="0" width="14" height="10" rx="3"/>
+      <path class="doodle" d="M -4 -1 A 4 4 0 0 1 4 -1 V -5 A 4 4 0 1 0 -4 -5 Z"/>
+    </symbol>
+    <symbol id="doodle-bubble" viewBox="-15 -15 30 30">
+      <path class="doodle" d="M -12 8 V -8 C -12 -10 0 -10 0 -10 H 12 V 8 H -6 L -12 12 Z" transform="scale(1, -1)"/>
+    </symbol>
+    <symbol id="doodle-constellation" viewBox="-20 -20 40 40">
+        <line class="doodle" x1="-15" y1="-10" x2="0" y2="0" stroke-width="1.5"/>
+        <line class="doodle" x1="0" y1="0" x2="15" y2="-5" stroke-width="1.5"/>
+        <line class="doodle" x1="0" y1="0" x2="5" y2="15" stroke-width="1.5"/>
+        <circle class="doodle" cx="-15" cy="-10" r="2.5"/>
+        <circle class="doodle" cx="0" cy="0" r="2.5"/>
+        <circle class="doodle" cx="15" cy="-5" r="2.5"/>
+        <circle class="doodle" cx="5" cy="15" r="2.5"/>
+    </symbol>
+    <symbol id="doodle-paperplane" viewBox="-15 -15 30 30">
+      <path class="doodle" d="M -12 -8 L 12 0 L -12 8 L -8 0 Z"/>
+    </symbol>
+
+    <symbol id="doodle-comet" viewBox="-15 -15 30 30">
+      <circle class="doodle" cx="-5" cy="0" r="4"/>
+      <path class="doodle" d="M -2 0 C 5 -5 10 5 15 2"/>
+      <path class="doodle" d="M -2 0 C 5 5 10 -5 15 -2"/>
+    </symbol>
+    <symbol id="doodle-satellite" viewBox="-15 -15 30 30">
+        <rect class="doodle" x="-4" y="-4" width="8" height="8" transform="rotate(45)"/>
+        <line class="doodle" x1="-12" y1="-12" x2="-4" y2="-4"/>
+        <line class="doodle" x1="12" y1="12" x2="4" y2="4"/>
+        <path class="doodle" d="M -14 -8 L -10 -14 L -8 -10 Z"/>
+    </symbol>
+    <symbol id="doodle-binary" viewBox="-15 -15 30 30">
+        <text style="font-family: monospace; font-size: 10px; stroke-width: 0.5;" fill="none" transform="rotate(-30)">
+          <tspan x="0" y="0">01</tspan>
+          <tspan x="0" y="12">10</tspan>
+        </text>
+    </symbol>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#0B0C10"/>
+
+  <g opacity="0.4">
+    <use href="#doodle-planet" x="80" y="120" width="70" height="70" stroke="#6C63FF" transform="rotate(-15 80 120)"/>
+    <use href="#doodle-star4" x="280" y="90" width="45" height="45" stroke="#00C2FF"/>
+    <use href="#doodle-rocket" x="480" y="160" width="65" height="65" stroke="#FF6B35" transform="rotate(45 480 160)"/>
+    <use href="#doodle-lock" x="700" y="110" width="55" height="55" stroke="#B0B0B0" transform="rotate(15 700 110)"/>
+
+    <use href="#doodle-binary" x="150" y="310" width="50" height="50" stroke="#00C2FF"/>
+    <use href="#doodle-moon" x="350" y="280" width="60" height="60" stroke="#B0B0B0" transform="rotate(120 350 280)"/>
+    <use href="#doodle-bubble" x="550" y="340" width="70" height="70" stroke="#6C63FF" transform="rotate(-10 550 340)"/>
+    <use href="#doodle-constellation" x="720" y="290" width="90" height="90" stroke="#FF6B35"/>
+    
+    <use href="#doodle-paperplane" x="120" y="500" width="65" height="65" stroke="#FF6B35" transform="rotate(20 120 500)"/>
+    <use href="#doodle-comet" x="320" y="520" width="60" height="60" stroke="#B0B0B0" transform="rotate(-30 320 520)"/>
+    <use href="#doodle-planet" x="650" y="480" width="80" height="80" stroke="#00C2FF" transform="rotate(25 650 480)"/>
+
+    <use href="#doodle-lock" x="80" y="680" width="60" height="60" stroke="#6C63FF" transform="rotate(-10 80 680)"/>
+    <use href="#doodle-rocket" x="290" y="720" width="70" height="70" stroke="#B0B0B0" transform="rotate(-45 290 720)"/>
+    <use href="#doodle-satellite" x="500" y="660" width="65" height="65" stroke="#FF6B35"/>
+    <use href="#doodle-moon" x="730" y="700" width="55" height="55" stroke="#00C2FF" transform="rotate(-100 730 700)"/>
+
+    <use href="#doodle-constellation" x="100" y="880" width="100" height="100" stroke="#00C2FF" transform="rotate(15 100 880)"/>
+    <use href="#doodle-bubble" x="420" y="920" width="75" height="75" stroke="#B0B0B0" transform="scale(-1, 1) rotate(10 420 920)"/>
+    <use href="#doodle-paperplane" x="680" y="860" width="60" height="60" stroke="#6C63FF" transform="rotate(-15 680 860)"/>
+    
+    <use href="#doodle-star4" x="90" y="1080" width="50" height="50" stroke="#FF6B35"/>
+    <use href="#doodle-planet" x="300" y="1120" width="75" height="75" stroke="#B0B0B0" transform="rotate(-10 300 1120)"/>
+    <use href="#doodle-comet" x="520" y="1050" width="65" height="65" stroke="#00C2FF" transform="rotate(20 520 1050)"/>
+    <use href="#doodle-satellite" x="710" y="1100" width="55" height="55" stroke="#6C63FF" transform="rotate(-35 710 1100)"/>
+  </g>
+</svg>

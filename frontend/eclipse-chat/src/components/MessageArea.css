@@ -6,7 +6,7 @@
   height: 100vh;
   background: radial-gradient(ellipse at top, #0d0d1a 0%, #000000 70%);
   position: relative;
-  overflow: hidden;
+  overflow: hidden ;
   min-width:100% !important;
   align-items: center;
   justify-content: center;
@@ -394,8 +394,7 @@ max-width: 500px;
 /* Message Input Container */
 .message-input-container {
   padding: 1.5rem;
-  bottom: 0;
-  position: absolute;
+  /* position: absolute; */
   z-index: 3;
   width:100%;  
   background: rgba(29, 28, 28, 0.2);
@@ -719,30 +718,18 @@ max-width: 500px;
     transform: scale(1.2);
   }
 }
-
-/* Add these to your MessageArea.css */
-
-.message-area-container {
-  position: relative;
-  /* Ensure proper stacking context */
-}
-
 .welcome-container {
   position: relative!important;
   z-index: 2;
-  /* Ensure welcome content appears above particles */
 }
 
 .welcome-header {
   position: relative!important;
   z-index: 2;
-  /* Add a subtle backdrop if needed for better text readability */
   backdrop-filter: blur(1px);
   padding: 2rem;
   border-radius: 16px;
 }
-
-/* Optional: Add a subtle overlay to improve text contrast */
 .welcome-container::before {
   content: '';
   position: absolute!important;
