@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-
+import { io } from 'socket.io-client';
 
 import MessageBubble from './MessageBubble';
 import ParticlesBackground from './ParticlesBackground';
@@ -12,11 +12,83 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [userStatus, setUserStatus] = useState('offline');
+  const [isUserTyping, setIsUserTyping] = useState(false);
+  const [typingTimeout, setTypingTimeout] = useState(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const pollingIntervalRef = useRef(null);
   const messageExpirationTimeoutsRef = useRef(new Map());
+  const socketRef = useRef(null);
 
+  // Initialize Socket.IO connection
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    socketRef.current = io('http://localhost:5001', {
+      auth: { token },
+      transports: ['websocket', 'polling']
+    });
+
+    // Authenticate user for presence tracking
+    socketRef.current.emit('user_authenticated', {
+      eclipseId: currentUser.eclipseId,
+      username: currentUser.displayName || currentUser.username
+    });
+
+    // Listen for user status updates
+    socketRef.current.on('user_status_update', (data) => {
+      if (selectedUser && data.eclipseId === selectedUser.eclipseId) {
+        setUserStatus(data.status);
+      }
+    });
+
+    // Listen for online users list
+    socketRef.current.on('online_users_list', (onlineUsers) => {
+      if (selectedUser) {
+        const user = onlineUsers.find(u => u.eclipseId === selectedUser.eclipseId);
+        setUserStatus(user ? user.status : 'offline');
+      }
+    });
+
+    // Listen for typing indicators
+    socketRef.current.on('user_typing', (data) => {
+      if (selectedUser && data.eclipseId === selectedUser.eclipseId) {
+        setIsUserTyping(data.isTyping);
+      }
+    });
+
+    // Send periodic ping to maintain active status
+    const pingInterval = setInterval(() => {
+      if (socketRef.current) {
+        socketRef.current.emit('ping');
+      }
+    }, 30000); 
+
+    return () => {
+      clearInterval(pingInterval);
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, [currentUser, selectedUser]);
+
+  // Update user status when selectedUser changes
+  useEffect(() => {
+    if (selectedUser && socketRef.current) {
+      // Check if selected user is online
+      socketRef.current.emit('check_user_status', { eclipseId: selectedUser.eclipseId });
+    }
+  }, [selectedUser]);
+
+  // Join room for private messaging
+  useEffect(() => {
+    if (selectedUser && socketRef.current && currentUser) {
+      const roomId = [currentUser.eclipseId, selectedUser.eclipseId].sort().join('_');
+      socketRef.current.emit('join_room', roomId);
+    }
+  }, [selectedUser, currentUser]);
 
   const isMessageExpired = (messageData) => {
     if (!messageData.expiresAt) return false;
@@ -117,8 +189,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     return () => clearInterval(cleanupInterval);
   }, [removeExpiredMessages]);
 
-
-
   const handleSaveMessage = async (messageId) => {
     console.log(messageId)
     try {
@@ -193,6 +263,11 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     setMessages(prev => [...prev, optimisticMessage]);
     setMessage('');
 
+    // Stop typing indicator
+    if (socketRef.current && selectedUser) {
+      socketRef.current.emit('typing_stop', { recipientEclipseId: selectedUser.eclipseId });
+    }
+
     try {
       const token = localStorage.getItem("token");
       const res = await fetch('http://localhost:5001/api/messages/send', {
@@ -247,10 +322,32 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
 
   const handleInputChange = (e) => {
     setMessage(e.target.value);
-    if (!isTyping) {
-      setIsTyping(true);
-      setTimeout(() => setIsTyping(false), 3000);
+    
+    // Send user activity to maintain online status
+    if (socketRef.current) {
+      socketRef.current.emit('user_activity');
     }
+
+    // Handle typing indicators
+    if (!isTyping && socketRef.current && selectedUser) {
+      setIsTyping(true);
+      socketRef.current.emit('typing_start', { recipientEclipseId: selectedUser.eclipseId });
+    }
+
+    // Clear existing timeout
+    if (typingTimeout) {
+      clearTimeout(typingTimeout);
+    }
+
+    // Set new timeout to stop typing
+    const newTimeout = setTimeout(() => {
+      setIsTyping(false);
+      if (socketRef.current && selectedUser) {
+        socketRef.current.emit('typing_stop', { recipientEclipseId: selectedUser.eclipseId });
+      }
+    }, 1000);
+
+    setTypingTimeout(newTimeout);
   };
 
   const formatTime = (timestamp) => {
@@ -288,6 +385,34 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     return messageData.sender.eclipseId === currentUser.eclipseId;
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'online':
+        return '#4ade80'; // green-400
+      case 'idle':
+        return '#fbbf24'; // amber-400
+      case 'away':
+        return '#f59e0b'; // amber-500
+      case 'offline':
+      default:
+        return '#ef4444'; // red-500
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'online':
+        return 'Online';
+      case 'idle':
+        return 'Idle';
+      case 'away':
+        return 'Away';
+      case 'offline':
+      default:
+        return 'Offline';
+    }
+  };
+
   if (!selectedUser) {
     return (
       <div className="message-area-container">
@@ -310,9 +435,14 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
         <div className="chat-user-info">
           <div className="chat-avatar">
             <img src={selectedUser.avatar} alt={selectedUser.displayName} />
+          
           </div>
           <div className="chat-user-details">
             <h3>{selectedUser.displayName}</h3>
+            <div className="user-status" style={{ color: getStatusColor(userStatus) }}>
+              <span className="status-dot" style={{ backgroundColor: getStatusColor(userStatus) }}></span>
+              {getStatusText(userStatus)}
+            </div>
           </div>
         </div>
         <button className="back-button" onClick={onBack}>
@@ -347,6 +477,23 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
                 currentUser={currentUser}
               />
             ))}
+
+            {/* Typing indicator */}
+            {isUserTyping && (
+              <div className="typing-indicator">
+                <div className="typing-avatar">
+                  <img src={selectedUser.avatar} alt={selectedUser.displayName} />
+                </div>
+                <div className="typing-bubble">
+                  <div className="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <div className="typing-text">{selectedUser.displayName} is typing...</div>
+                </div>
+              </div>
+            )}
 
             <div ref={messagesEndRef} />
           </div>
@@ -383,7 +530,5 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     </div>
   );
 };
-
-
 
 export default MessageArea;

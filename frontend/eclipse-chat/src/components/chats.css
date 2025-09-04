@@ -234,6 +234,9 @@ body{
   padding: 0;
   background: transparent;
   overflow-y: auto;
+  z-index: 99 !important;
+  background: rgb(15, 15, 26);
+  /* background-color: pink; */
 }
 
 /* Individual Chat Items */
@@ -406,6 +409,7 @@ body{
   text-align: center;
   padding: 2rem;
   opacity: 0.9;
+  z-index:99;
 }
 
 .empty-illustration {

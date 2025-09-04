@@ -22,7 +22,7 @@ const Chats = () => {
   const [setShowSearch] = useState(false);
   const [conversations, setConversations] = useState([]);
   const [conversationsLoading, setConversationsLoading] = useState(false);
-  
+
   // Enhanced read status tracking
   const [readStatusMap, setReadStatusMap] = useState(new Map());
   const prevConversationsRef = useRef([]);
@@ -56,7 +56,7 @@ const Chats = () => {
         const data = await res.json();
         setUser(data.user);
         await fetchPendingRequestsCount();
-        await fetchReadStatus(); 
+        await fetchReadStatus();
         await fetchConversations(true);
       } catch (err) {
         console.error("Verify error:", err);
@@ -85,11 +85,11 @@ const Chats = () => {
       if (response.ok) {
         const data = await response.json();
         const statusMap = new Map();
-        
+
         Object.entries(data.readStatus || {}).forEach(([conversationId, status]) => {
           statusMap.set(conversationId, status);
         });
-        
+
         setReadStatusMap(statusMap);
       }
     } catch (error) {
@@ -153,7 +153,7 @@ const Chats = () => {
       if (showLoading) {
         setConversationsLoading(true);
       }
-      
+
       const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:5001/api/messages/conversations", {
         method: "GET",
@@ -166,12 +166,12 @@ const Chats = () => {
       if (response.ok) {
         const data = await response.json();
         const conversationsList = data.conversations || [];
-        
+
         const transformedConversations = conversationsList.map(conv => {
           if (!conv || !conv.user) return null;
-          
+
           const conversationId = `conv_${conv.user._id}`;
-          
+
           return {
             id: conversationId,
             participants: [conv.user, user],
@@ -184,9 +184,9 @@ const Chats = () => {
             unreadCount: 0
           };
         }).filter(Boolean);
-        const getConversationKey = (conv) => 
+        const getConversationKey = (conv) =>
           `${conv.id}-${conv.lastMessage?.messageId || 'empty'}-${conv.lastMessage?.timestamp || 0}`;
-        
+
         const currentKeys = transformedConversations.map(getConversationKey).join('|');
         const previousKeys = prevConversationsRef.current.map(getConversationKey).join('|');
         if (currentKeys !== previousKeys) {
@@ -196,22 +196,22 @@ const Chats = () => {
               .filter(conv => !prevConversationIds.has(conv.id))
               .map(conv => conv.id)
           );
-        
+
           const newUnreadConversations = new Set();
           transformedConversations.forEach(conv => {
             if (conv.lastMessage) {
               const readStatus = readStatusMap.get(conv.id);
               const lastSeenMessageId = readStatus?.lastSeenMessageId;
               const currentMessageId = conv.lastMessage.messageId;
-              if (conv.lastMessage.sender?.eclipseId !== user?.eclipseId && 
-                  (!lastSeenMessageId || lastSeenMessageId !== currentMessageId)) {
+              if (conv.lastMessage.sender?.eclipseId !== user?.eclipseId &&
+                (!lastSeenMessageId || lastSeenMessageId !== currentMessageId)) {
                 newUnreadConversations.add(conv.id);
               }
             }
           });
           prevConversationsRef.current = transformedConversations;
           setConversations(transformedConversations);
-          
+
           if (newIds.size > 0) {
             setNewConversationIds(newIds);
             setTimeout(() => setNewConversationIds(new Set()), 300);
@@ -390,7 +390,7 @@ const Chats = () => {
     const otherUser = conversation.participants.find(
       participant => participant && participant.eclipseId !== user?.eclipseId
     );
-    
+
     if (!otherUser) {
       console.error('Could not find other user in conversation for selection');
       return;
@@ -403,7 +403,7 @@ const Chats = () => {
         return updated;
       });
     }
-    
+
     setSelectedUser(otherUser);
   }, [user]);
 
@@ -416,7 +416,7 @@ const Chats = () => {
       const otherUser = conv.participants.find(p => p?.eclipseId !== user?.eclipseId);
       return otherUser?.eclipseId === recipientUser?.eclipseId;
     });
-    
+
     if (conversation && conversation.lastMessage) {
       await updateReadStatus(recipientUser.eclipseId, conversation.lastMessage.messageId);
       setUnreadConversations(prev => {
@@ -430,7 +430,7 @@ const Chats = () => {
   const markAllAsRead = async () => {
     try {
       const unreadConvs = conversations.filter(conv => unreadConversations.has(conv.id));
-      
+
       if (unreadConvs.length === 0) return;
 
       const updates = unreadConvs.map(conv => {
@@ -479,7 +479,7 @@ const Chats = () => {
     const diffInMinutes = (now - date) / (1000 * 60);
     const diffInHours = diffInMinutes / 60;
     const diffInDays = diffInHours / 24;
-    
+
     if (diffInMinutes < 1) {
       return 'now';
     } else if (diffInMinutes < 60) {
@@ -497,17 +497,17 @@ const Chats = () => {
       const otherUser = conversation.participants.find(
         participant => participant && participant.eclipseId !== user?.eclipseId
       );
-      
+
       const isNewConversation = newConversationIds.has(conversation.id);
       let hasUnreadMessages = false;
       if (conversation.lastMessage && conversation.lastMessage.sender?.eclipseId !== user?.eclipseId) {
         const readStatus = readStatusMap.get(conversation.id);
         const lastSeenMessageId = readStatus?.lastSeenMessageId;
         const currentMessageId = conversation.lastMessage.messageId;
-        
+
         hasUnreadMessages = !lastSeenMessageId || lastSeenMessageId !== currentMessageId;
       }
-      
+
       return {
         ...conversation,
         otherUser,
@@ -523,16 +523,16 @@ const Chats = () => {
 
   const ConversationCard = useCallback(({ conversation }) => {
     const { otherUser, isNewConversation, hasUnreadMessages, isSelected } = conversation;
-    
+
     return (
-      <div 
+      <div
         className={`conversation-card ${isSelected ? 'selected' : ''} ${isNewConversation ? 'new-conversation' : ''} ${hasUnreadMessages ? 'has-unread' : ''}`}
         onClick={() => handleConversationSelect(conversation)}
       >
         <div className={`conversation-avatar ${hasUnreadMessages ? 'has-unread' : ''}`}>
-          <img 
-            src={otherUser.avatar || '/default-avatar.png'} 
-            alt={otherUser.displayName || 'User'} 
+          <img
+            src={otherUser.avatar || '/default-avatar.png'}
+            alt={otherUser.displayName || 'User'}
             onError={(e) => {
               e.target.src = '/default-avatar.png';
             }}
@@ -547,23 +547,34 @@ const Chats = () => {
               {otherUser.displayName || 'Unknown User'}
             </h4>
             <span className="conversation-time">
-              {conversation.lastMessage?.timestamp 
+              {conversation.lastMessage?.timestamp
                 ? formatLastMessageTime(conversation.lastMessage.timestamp)
                 : ''
               }
             </span>
           </div>
           <div className="conversation-preview">
-            <p className={`last-message ${hasUnreadMessages ? 'unread-message' : ''}`}>
-              <i className="ph ph-chat-circle-dots"></i>
-              {conversation.lastMessage?.content
-                ? (conversation.lastMessage.sender?.eclipseId === user?.eclipseId 
+            {hasUnreadMessages ?
+              <b><p className={`last-message ${hasUnreadMessages ? 'unread-message' : ''}`}>
+                <i className="ph ph-chat-circle-dots"></i>
+                {conversation.lastMessage?.content
+                  ? (conversation.lastMessage.sender?.eclipseId === user?.eclipseId
                     ? `You: ${formatMessagePreview(conversation.lastMessage.content)}`
                     : formatMessagePreview(conversation.lastMessage.content)
                   )
-                : 'No messages yet'
-              }
-            </p>
+                  : 'No messages yet'
+                }
+              </p></b>
+              : <p className={`last-message ${hasUnreadMessages ? 'unread-message' : ''}`}>
+                <i className="ph ph-chat-circle-dots"></i>
+                {conversation.lastMessage?.content
+                  ? (conversation.lastMessage.sender?.eclipseId === user?.eclipseId
+                    ? `You: ${formatMessagePreview(conversation.lastMessage.content)}`
+                    : formatMessagePreview(conversation.lastMessage.content)
+                  )
+                  : 'No messages yet'
+                }
+              </p>}
             {hasUnreadMessages && (
               <span className="unread-badge">
                 •
@@ -623,12 +634,12 @@ const Chats = () => {
                 </div>
                 <div className="interactionButtons">
                   {totalUnreadCount > 0 && (
-                    <button 
+                    <button
                       className="mark-all-read-btn"
                       onClick={markAllAsRead}
                       title="Mark all as read"
                     >
-                    <span class="material-symbols-outlined">mark_chat_read</span>
+                      <span class="material-symbols-outlined">mark_chat_read</span>
                     </button>
                   )}
                   <div className="connection-request-div" onClick={handleConnectionRequestsToggle}>
@@ -645,7 +656,7 @@ const Chats = () => {
                 <UserSearch onUserSelect={handleUserSelect} />
               </div>
             </div>
-            
+
             {/* Conversations List */}
             <div className="contacts">
               {conversationsLoading ? (
@@ -662,7 +673,7 @@ const Chats = () => {
               ) : (
                 <div className="conversations-list">
                   {conversationItems.map((conversation) => (
-                    <ConversationCard 
+                    <ConversationCard
                       key={`stable-${conversation.id}-${conversation.lastMessage?.messageId || 'no-msg'}`}
                       conversation={conversation}
                     />

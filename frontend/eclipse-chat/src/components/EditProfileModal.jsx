@@ -18,6 +18,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
     new: false,
     confirm: false
   });
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize avatar settings with proper defaults
   const [avatarSettings, setAvatarSettings] = useState({
@@ -44,6 +45,45 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
     }
   }, [formData.displayName]);
 
+  // Handle modal open/close - only reset when opening
+  useEffect(() => {
+    if (isOpen && !isInitialized) {
+      // Initialize form data
+      setFormData({
+        displayName: user?.displayName || '',
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      
+      // Initialize avatar settings
+      setAvatarSettings({
+        character: user?.displayName?.[0]?.toUpperCase() || '', // Empty if no display name
+        font: 'Montserrat',
+        backgroundColor: '#3B82F6',
+        foregroundColor: '#FFFFFF',
+        useGradient: false, // Off by default
+        gradientColor: '#9333EA'
+      });
+      
+      // Clear errors and messages
+      setErrors({});
+      setSuccessMessage('');
+      
+      // Reset to general tab only on initial open
+      setActiveTab('general');
+      setIsInitialized(true);
+      
+      // Prevent body scrolling
+      document.body.style.overflow = 'hidden';
+    } else if (!isOpen) {
+      // Reset initialization flag when modal closes
+      setIsInitialized(false);
+      document.body.style.overflow = 'unset';
+    }
+  }, [isOpen, user, isInitialized]);
+
+  // Handle click outside and escape key
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -60,32 +100,13 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleEscapeKey);
-      document.body.style.overflow = 'hidden';
-      setFormData({
-        displayName: user?.displayName || '',
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-      setAvatarSettings({
-        character: user?.displayName?.[0]?.toUpperCase() || '', // Empty if no display name
-        font: 'Montserrat',
-        backgroundColor: '#3B82F6',
-        foregroundColor: '#FFFFFF',
-        useGradient: false, // Off by default
-        gradientColor: '#9333EA'
-      });
-      setErrors({});
-      setSuccessMessage('');
-      setActiveTab('general');
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscapeKey);
-      document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose, user]);
+  }, [isOpen, onClose]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -548,8 +569,6 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
           </form>
         </div>
       </div>
-
-      {/* Success Message - Positioned at the right side of screen */}
       {successMessage && (
         <div className="success-toast">
           <div className="success-toast-content">

@@ -8,14 +8,15 @@ const {
     getUserProfile,
     searchUsers,
     getPendingRequests,
-    getConnections
+    getConnections,
+    getOnlineUsers,
+    getUserAccountStats
 } = require('../controllers/userController');
-
 
 const { authenticate } = require('../middleware/authMiddleware');
 
-
 router.get('/profile', authenticate, getUserProfile);
+router.get('/account-stats', authenticate, getUserAccountStats);
 router.put('/update-displayName', authenticate, updateDisplayName);
 router.put('/update-password', authenticate, updatePassword);
 router.put('/update-profilePic', authenticate, updateProfilePic);
@@ -23,6 +24,6 @@ router.delete('/delete', authenticate, deleteUser);
 router.get('/search', authenticate, searchUsers);
 router.get('/pending', authenticate, getPendingRequests);
 router.get('/connections', authenticate, getConnections);
-
+router.get('/online-users', authenticate, getOnlineUsers);
 
 module.exports = router;

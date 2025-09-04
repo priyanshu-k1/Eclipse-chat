@@ -11,7 +11,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes'); 
 const orbitRoutes = require('./routes/orbitRoutes');
-const initializeSocket = require('./socket/socketHandler');
+const {initializeSocket} = require('./socket/socketHandler');
 const readStatusRoutes = require('./routes/readStatusRoutes');
 
 

@@ -1,6 +1,7 @@
 const User = require('../models/userModel');
 const Orbit = require('../models/orbitModel');
 const bcrypt = require('bcryptjs');
+const { getSocketIO } = require('../socket/socketHandler');
 
 const updateDisplayName = async (req, res) => {
     try {
@@ -226,8 +227,6 @@ const getPendingRequests = async (req, res) => {
 const getConnections = async (req, res) => {
   try {
     const userId = req.user.id;
-
-    // Find all accepted orbits for this user
     const orbits = await Orbit.find({
       $or: [
         { senderId: userId, status: 'accepted' },
@@ -236,8 +235,6 @@ const getConnections = async (req, res) => {
     })
       .populate('senderId', 'displayName avatar eclipseId')
       .populate('receiverId', 'displayName avatar eclipseId');
-
-    // Format the response so frontend has orbitId + other user's details
     const connections = orbits.map(orbit => {
       const otherUser =
         orbit.senderId._id.toString() === userId
@@ -245,7 +242,7 @@ const getConnections = async (req, res) => {
           : orbit.senderId;
 
       return {
-        id: orbit._id, // Orbit ID (used for remove API)
+        id: orbit._id,
         user: {
           id: otherUser._id,
           displayName: otherUser.displayName,
@@ -265,7 +262,97 @@ const getConnections = async (req, res) => {
   }
 };
 
+const getOnlineUsers = async (req, res) => {
+    try {
+        const io = getSocketIO();
+        
+        if (!io || !io.getOnlineUsers) {
+            return res.status(500).json({ message: 'Socket service not available' });
+        }
+        
+        const onlineUsers = io.getOnlineUsers();
+        
+        res.status(200).json({ 
+            message: 'Online users retrieved successfully',
+            onlineUsers,
+            count: onlineUsers.length
+        });
+    } catch (error) {
+        console.error('Error getting online users:', error);
+        res.status(500).json({ message: 'Error retrieving online users', error: error.message });
+    }
+};
+const getUserAccountStats = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        const user = await User.findById(userId)
+            .select('createdAt friends')
+            .populate('friends', '_id');
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
 
+        res.status(200).json({
+            message: 'User account stats retrieved successfully',
+            accountStats: {
+                createdAt: user.createdAt,
+                friendCount: user.friends.length,
+                accountAge: {
+                    days: Math.floor((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)),
+                    readable: formatAccountAge(user.createdAt)
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error getting user account stats:', error);
+        res.status(500).json({ 
+            message: 'Error retrieving account stats', 
+            error: error.message 
+        });
+    }
+};
+const formatAccountAge = (createdAt) => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffTime = Math.abs(now - created);
+    
+    const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+    
+    if (years > 0) {
+        return `${years} year${years > 1 ? 's' : ''} ago`;
+    } else if (months > 0) {
+        return `${months} month${months > 1 ? 's' : ''} ago`;
+    } else if (days > 0) {
+        return `${days} day${days > 1 ? 's' : ''} ago`;
+    } else {
+        return 'Today';
+    }
+};
+const getUserAccountStatsData = async (userId) => {
+    try {
+        const user = await User.findById(userId)
+            .select('createdAt friends');
+        
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        return {
+            createdAt: user.createdAt,
+            friendCount: user.friends.length,
+            accountAge: {
+                days: Math.floor((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)),
+                readable: formatAccountAge(user.createdAt)
+            }
+        };
+    } catch (error) {
+        throw new Error(`Error retrieving account stats: ${error.message}`);
+    }
+};
 module.exports = {
     updateDisplayName,
     updatePassword,
@@ -274,5 +361,9 @@ module.exports = {
     getUserProfile,
     searchUsers,
     getPendingRequests,
-    getConnections
+    getConnections,
+    getOnlineUsers,
+    getUserAccountStats,
+    getUserAccountStatsData,
+    formatAccountAge
 };
