@@ -94,8 +94,6 @@ const MessageBubble = ({
           <span className="message-time">
             {formatTime(message.timestamp)}
           </span>
-          
-          {/* Show expiration indicator only if message will expire and isn't saved by both */}
           {message.expiresAt && !isSavedByBoth && (
             <div className="message-expires">
               <i className="ph ph-clock"></i>
@@ -123,7 +121,7 @@ const MessageBubble = ({
             {isActionLoading ? (
               <div className="action-spinner" />
             ) : (
-              <i className={`ph ${isSavedByMe ? 'ph-eraser' : 'ph-bookmark-simple'}`}></i>
+              <span className={`ph ${isSavedByMe ? 'ph-trash' : 'ph-bookmark-simple'}`}></span>
             )}
           </button>
           

@@ -9,6 +9,7 @@ import EditProfileModal from './EditProfileModal';
 import UserSearch from './UserSearch';
 import ConnectionRequestsModal from './ConnectionRequestsModal';
 import MessageArea from './MessageArea';
+import NotificationModal from './NotificationModal'
 
 const Chats = () => {
   const navigate = useNavigate();
@@ -23,7 +24,6 @@ const Chats = () => {
   const [conversations, setConversations] = useState([]);
   const [conversationsLoading, setConversationsLoading] = useState(false);
 
-  // Enhanced read status tracking
   const [readStatusMap, setReadStatusMap] = useState(new Map());
   const prevConversationsRef = useRef([]);
   const [newConversationIds, setNewConversationIds] = useState(new Set());
@@ -96,6 +96,7 @@ const Chats = () => {
       console.error("Error fetching read status:", error);
     }
   };
+
   const updateReadStatus = async (eclipseId, messageId) => {
     try {
       const token = localStorage.getItem("token");
@@ -184,11 +185,13 @@ const Chats = () => {
             unreadCount: 0
           };
         }).filter(Boolean);
+        
         const getConversationKey = (conv) =>
           `${conv.id}-${conv.lastMessage?.messageId || 'empty'}-${conv.lastMessage?.timestamp || 0}`;
 
         const currentKeys = transformedConversations.map(getConversationKey).join('|');
         const previousKeys = prevConversationsRef.current.map(getConversationKey).join('|');
+        
         if (currentKeys !== previousKeys) {
           const prevConversationIds = new Set(prevConversationsRef.current.map(c => c.id));
           const newIds = new Set(
@@ -197,18 +200,25 @@ const Chats = () => {
               .map(conv => conv.id)
           );
 
+          // Calculate unread conversations - only messages from OTHER users count
           const newUnreadConversations = new Set();
           transformedConversations.forEach(conv => {
             if (conv.lastMessage) {
-              const readStatus = readStatusMap.get(conv.id);
-              const lastSeenMessageId = readStatus?.lastSeenMessageId;
-              const currentMessageId = conv.lastMessage.messageId;
-              if (conv.lastMessage.sender?.eclipseId !== user?.eclipseId &&
-                (!lastSeenMessageId || lastSeenMessageId !== currentMessageId)) {
-                newUnreadConversations.add(conv.id);
+              // Only check unread status if the last message is NOT from current user
+              if (conv.lastMessage.sender?.eclipseId !== user?.eclipseId) {
+                const readStatus = readStatusMap.get(conv.id);
+                const lastSeenMessageId = readStatus?.lastSeenMessageId;
+                const currentMessageId = conv.lastMessage.messageId;
+                
+                // Mark as unread if we haven't seen this message yet
+                if (!lastSeenMessageId || lastSeenMessageId !== currentMessageId) {
+                  newUnreadConversations.add(conv.id);
+                }
               }
+              // If the last message is from current user, it's never unread for them
             }
           });
+          
           prevConversationsRef.current = transformedConversations;
           setConversations(transformedConversations);
 
@@ -229,6 +239,7 @@ const Chats = () => {
       }
     }
   }, [user, readStatusMap]);
+
   useEffect(() => {
     if (!user) return;
 
@@ -395,7 +406,7 @@ const Chats = () => {
       console.error('Could not find other user in conversation for selection');
       return;
     }
-    if (conversation.lastMessage && conversation.lastMessage.sender?.eclipseId !== user?.eclipseId) {
+    if (conversation.lastMessage) {
       await updateReadStatus(otherUser.eclipseId, conversation.lastMessage.messageId);
       setUnreadConversations(prev => {
         const updated = new Set(prev);
@@ -411,22 +422,26 @@ const Chats = () => {
     setSelectedUser(null);
     fetchConversations(false);
   };
-  const handleMessageSent = async (recipientUser) => {
-    const conversation = conversations.find(conv => {
-      const otherUser = conv.participants.find(p => p?.eclipseId !== user?.eclipseId);
-      return otherUser?.eclipseId === recipientUser?.eclipseId;
-    });
 
-    if (conversation && conversation.lastMessage) {
-      await updateReadStatus(recipientUser.eclipseId, conversation.lastMessage.messageId);
-      setUnreadConversations(prev => {
-        const updated = new Set(prev);
-        updated.delete(conversation.id);
-        return updated;
+  const handleMessageSent = async (recipientUser) => {
+    await fetchConversations(false);
+    setTimeout(async () => {
+      const updatedConversation = conversations.find(conv => {
+        const otherUser = conv.participants.find(p => p?.eclipseId !== user?.eclipseId);
+        return otherUser?.eclipseId === recipientUser?.eclipseId;
       });
-    }
-    fetchConversations(false);
+
+      if (updatedConversation && updatedConversation.lastMessage) {
+        await updateReadStatus(recipientUser.eclipseId, updatedConversation.lastMessage.messageId);
+        setUnreadConversations(prev => {
+          const updated = new Set(prev);
+          updated.delete(updatedConversation.id);
+          return updated;
+        });
+      }
+    }, 500);
   };
+
   const markAllAsRead = async () => {
     try {
       const unreadConvs = conversations.filter(conv => unreadConversations.has(conv.id));
@@ -492,6 +507,7 @@ const Chats = () => {
       return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
   }, []);
+
   const conversationItems = useMemo(() => {
     return conversations.map((conversation) => {
       const otherUser = conversation.participants.find(
@@ -500,6 +516,8 @@ const Chats = () => {
 
       const isNewConversation = newConversationIds.has(conversation.id);
       let hasUnreadMessages = false;
+      
+      // Only check for unread messages if the last message is NOT from the current user
       if (conversation.lastMessage && conversation.lastMessage.sender?.eclipseId !== user?.eclipseId) {
         const readStatus = readStatusMap.get(conversation.id);
         const lastSeenMessageId = readStatus?.lastSeenMessageId;
@@ -517,6 +535,7 @@ const Chats = () => {
       };
     });
   }, [conversations, newConversationIds, readStatusMap, selectedUser?.eclipseId, user?.eclipseId]);
+
   const totalUnreadCount = useMemo(() => {
     return conversationItems.filter(conv => conv.hasUnreadMessages).length;
   }, [conversationItems]);
@@ -628,7 +647,7 @@ const Chats = () => {
                   <h3>Chats</h3>
                   {totalUnreadCount > 0 && (
                     <span className="total-unread-badge">
-                      <i class="ph ph-broadcast"></i> Orbital Pings: {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+                      <i className="ph ph-broadcast"></i> Orbital Pings: {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
                     </span>
                   )}
                 </div>
@@ -639,7 +658,7 @@ const Chats = () => {
                       onClick={markAllAsRead}
                       title="Mark all as read"
                     >
-                      <span class="material-symbols-outlined">mark_chat_read</span>
+                      <span className="material-symbols-outlined">mark_chat_read</span>
                     </button>
                   )}
                   <div className="connection-request-div" onClick={handleConnectionRequestsToggle}>

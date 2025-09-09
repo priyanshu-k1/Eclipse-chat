@@ -1,10 +1,91 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
 import MessageBubble from './MessageBubble';
 import ParticlesBackground from './ParticlesBackground';
+import NotificationModal from './NotificationModal';
 import './MessageArea.css';
-import backgroundDoodle from '../assets/chat-background-doodle.svg';
+import backgroundDoodle from '../assets/chatbackground.svg';
+
+const GalaxyStatusCard = ({ currentUser, accountStats, onlineUsers, connections }) => {
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const statusMessages = [
+    `Exploring since ${accountStats?.accountAge?.readable || 'unknown'}`,
+    `Currently orbiting ${connections?.length || 0} travelers`,
+    `Encrypted galaxy: secure & expanding`,
+    `${onlineUsers?.length || 0} explorers online`
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentMessageIndex((prev) => (prev + 1) % statusMessages.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [statusMessages.length]);
+
+  return (
+    <div 
+      className={`galaxy-status-card ${isHovered ? 'hovered' : ''}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}>
+      {/* Animated background stars */}
+      <div className="status-card-stars">
+        <div className="status-star" style={{ left: '10%', animationDelay: '0s' }}></div>
+        <div className="status-star" style={{ left: '30%', animationDelay: '1s' }}></div>
+        <div className="status-star" style={{ left: '60%', animationDelay: '2s' }}></div>
+        <div className="status-star" style={{ left: '80%', animationDelay: '1.5s' }}></div>
+      </div>
+
+      {/* Orbit animation container */}
+      <div className="orbit-container">
+        {/* Central avatar */}
+        <div className="central-avatar">
+          <img src={currentUser?.avatar} alt={currentUser?.displayName} />
+        </div>
+
+        {/* Orbit rings */}
+        <div className="orbit-ring orbit-ring-1">
+          <div className="satellite satellite-1">
+            <i className="ph ph-planet"></i>
+          </div>
+        </div>
+
+        {connections && connections.length > 1 && (
+          <div className="orbit-ring orbit-ring-2">
+            <div className="satellite satellite-2">
+              <i className="ph ph-rocket"></i>
+            </div>
+          </div>
+        )}
+
+        {connections && connections.length > 2 && (
+          <div className="orbit-ring orbit-ring-3">
+            <div className="satellite satellite-3">
+              <i className="ph ph-shooting-star"></i>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Status text */}
+      <div className="status-text">
+        <span className="material-symbols-outlined">emoji_objects</span>
+        <span className="status-message">
+          {statusMessages[currentMessageIndex]}
+        </span>
+      </div>
+
+      {/* Pulse indicator */}
+      <div className="pulse-indicator">
+        <div className="pulse-dot"></div>
+      </div>
+    </div>
+  );
+};
 
 const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   const [message, setMessage] = useState('');
@@ -15,11 +96,196 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   const [userStatus, setUserStatus] = useState('offline');
   const [isUserTyping, setIsUserTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState(null);
+  const [accountStats, setAccountStats] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const [connections, setConnections] = useState([]);
+
+  // Notification modal state
+  const [notification, setNotification] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
+
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const textareaRef = useRef(null);
   const pollingIntervalRef = useRef(null);
   const messageExpirationTimeoutsRef = useRef(new Map());
   const socketRef = useRef(null);
+
+  // Show notification function
+  const showNotification = (title, message, type = 'info') => {
+    setNotification({
+      isOpen: true,
+      title,
+      message,
+      type
+    });
+  };
+
+  // Close notification function
+  const closeNotification = () => {
+    setNotification(prev => ({
+      ...prev,
+      isOpen: false
+    }));
+  };
+
+  // Get notification title and type based on error type
+  const getNotificationConfig = (responseData) => {
+    const { type, message } = responseData;
+    switch (type) {
+      case 'orbit_denied':
+        return {
+          title: 'Orbit Request Denied',
+          type: 'warning'
+        };
+      case 'message_limit_reached':
+        return {
+          title: 'Message Limit Reached',
+          type: 'warning'
+        };
+      case 'user_not_found':
+        return {
+          title: 'User Not Found',
+          type: 'error'
+        };
+      case 'validation_error':
+        return {
+          title: 'Validation Error',
+          type: 'error'
+        };
+      case 'authorization_error':
+        return {
+          title: 'Authorization Error',
+          type: 'error'
+        };
+      case 'error':
+        return {
+          title: 'Error',
+          type: 'error'
+        };
+      case 'success':
+        return {
+          title: 'Success',
+          type: 'info'
+        };
+      default:
+        return {
+          title: 'Notification',
+          type: 'info'
+        };
+    }
+  };
+
+  // Improved scroll to bottom function
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        scrollToBottom();
+      }, 50);
+    }
+  }, [messages, scrollToBottom]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && selectedUser) {
+        onBack();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedUser, onBack]);
+
+  // Fetch account stats and connections for status card
+  useEffect(() => {
+    if (currentUser) {
+      fetchAccountStats();
+      fetchOnlineUsers();
+      fetchConnections();
+    }
+  }, [currentUser]);
+
+  const fetchAccountStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5001/api/users/account-stats', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAccountStats(data.accountStats);
+      } else {
+        const errorData = await res.json();
+        const config = getNotificationConfig(errorData);
+        showNotification(config.title, errorData.message, config.type);
+      }
+    } catch (error) {
+      console.error('Error fetching account stats:', error);
+      showNotification('Network Error', 'Failed to fetch account statistics', 'error');
+    }
+  };
+
+  const fetchOnlineUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5001/api/users/online-users', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setOnlineUsers(data.onlineUsers || []);
+      } else {
+        const errorData = await res.json();
+        const config = getNotificationConfig(errorData);
+        showNotification(config.title, errorData.message, config.type);
+      }
+    } catch (error) {
+      console.error('Error fetching online users:', error);
+      showNotification('Network Error', 'Failed to fetch online users', 'error');
+    }
+  };
+
+  const fetchConnections = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5001/api/users/connections', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setConnections(data.connections || []);
+      } else {
+        const errorData = await res.json();
+        const config = getNotificationConfig(errorData);
+        showNotification(config.title, errorData.message, config.type);
+      }
+    } catch (error) {
+      console.error('Error fetching connections:', error);
+      showNotification('Network Error', 'Failed to fetch connections', 'error');
+    }
+  };
 
   // Initialize Socket.IO connection
   useEffect(() => {
@@ -50,6 +316,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
         const user = onlineUsers.find(u => u.eclipseId === selectedUser.eclipseId);
         setUserStatus(user ? user.status : 'offline');
       }
+      setOnlineUsers(onlineUsers);
     });
 
     // Listen for typing indicators
@@ -148,11 +415,14 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
           }
         });
       } else {
-        console.error('Failed to fetch conversation');
+        const errorData = await res.json();
+        const config = getNotificationConfig(errorData);
+        showNotification(config.title, errorData.message, config.type);
         setMessages([]);
       }
     } catch (error) {
       console.error('Error fetching conversation:', error);
+      showNotification('Network Error', 'Failed to load conversation', 'error');
       setMessages([]);
     }
   }, [selectedUser, setupMessageExpirationTimeout]);
@@ -234,18 +504,26 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
             expiresAt: data.expiresAt
           });
         }
+
+        // Show success notification
+        const config = getNotificationConfig(data);
+        showNotification(config.title, data.message, config.type);
       } else {
         const errorData = await res.json();
-        alert(errorData.message || 'Failed to update message');
+        const config = getNotificationConfig(errorData);
+        showNotification(config.title, errorData.message, config.type);
       }
     } catch (error) {
       console.error('Error updating message:', error);
-      alert('Network error. Please try again.');
+      showNotification('Network Error', 'Failed to update message', 'error');
     }
   };
 
   const handleSendMessage = async (e) => {
-    e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
     if (!message.trim() || isSending || !selectedUser) return;
 
@@ -288,11 +566,8 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
         setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
 
         console.error('Failed to send message:', data.message);
-        if (res.status === 403) {
-          alert(data.message);
-        } else {
-          alert('Failed to send message. Please try again.');
-        }
+        const config = getNotificationConfig(data);
+        showNotification(config.title, data.message, config.type);
         setMessage(messageToSend);
       } else {
         setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
@@ -307,15 +582,21 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
       console.error('Error sending message:', error);
       setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
       setMessage(messageToSend);
-      alert('Network error. Please try again.');
+      showNotification('Network Error', 'Failed to send message', 'error');
     } finally {
       setIsSending(false);
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      });
     }
   };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      e.stopPropagation();
       handleSendMessage(e);
     }
   };
@@ -388,14 +669,14 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'online':
-        return '#4ade80'; // green-400
+        return '#4ade80'; 
       case 'idle':
-        return '#fbbf24'; // amber-400
+        return '#fbbf24'; 
       case 'away':
-        return '#f59e0b'; // amber-500
+        return '#f59e0b';
       case 'offline':
       default:
-        return '#ef4444'; // red-500
+        return '#ef4444';
     }
   };
 
@@ -416,7 +697,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   if (!selectedUser) {
     return (
       <div className="message-area-container">
-        {/* <ParticlesBackground /> */}
         <div className="welcome-container">
           <div className="welcome-header">
             <h1 className="welcome-title">
@@ -425,17 +705,33 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
             <p className="welcome-subtitle">Your encrypted galaxy awaits exploration</p>
           </div>
         </div>
+        <GalaxyStatusCard 
+          currentUser={currentUser}
+          accountStats={accountStats}
+          onlineUsers={onlineUsers}
+          connections={connections}
+        />
+        {/* Notification Modal */}
+        <NotificationModal
+          isOpen={notification.isOpen}
+          onClose={closeNotification}
+          title={notification.title}
+          message={notification.message}
+          type={notification.type}
+        />
       </div>
     );
   }
 
   return (
-    <div className="message-area-container" style={{backgroundImage: `url(${backgroundDoodle})`}}>
+    <div className="message-area-container" 
+        style={
+          {backgroundImage: `url(${backgroundDoodle})`}
+          }>
       <div className="chat-header">
         <div className="chat-user-info">
           <div className="chat-avatar">
             <img src={selectedUser.avatar} alt={selectedUser.displayName} />
-          
           </div>
           <div className="chat-user-details">
             <h3>{selectedUser.displayName}</h3>
@@ -450,7 +746,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
         </button>
       </div>
 
-      <div className="messages-container">
+      <div className="messages-container" ref={messagesContainerRef}>
         {isLoading ? (
           <div className="loading-messages">
             <div className="loading-spinner"></div>
@@ -527,6 +823,15 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
           </div>
         </form>
       </div>
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={closeNotification}
+        title={notification.title}
+        message={notification.message}
+        type={notification.type}
+      />
     </div>
   );
 };

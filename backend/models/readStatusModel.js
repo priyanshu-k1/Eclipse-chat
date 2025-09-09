@@ -27,5 +27,6 @@ const readStatusSchema = new mongoose.Schema({
 
 readStatusSchema.index({ userId: 1, conversationWith: 1 }, { unique: true });
 readStatusSchema.index({ lastSeenAt: 1 });
+readStatusSchema.index({ userId: 1, lastSeenMessageId: 1 });
 
 module.exports = mongoose.model('ReadStatus', readStatusSchema);

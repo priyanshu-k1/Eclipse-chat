@@ -134,6 +134,17 @@ const UserMenuModal = ({ isOpen, onClose, user, onLogout, onDeleteAccount }) => 
               </div>
             </div>
           </div>
+
+          <div className="userArea">
+            <div className="headersection">
+              <h1>Command Deck</h1>
+            <p>Welcome back, Commander <b>{user?.displayName || "Stargazer"}</b>. Your mission records await.</p>
+            </div>
+            <div className="bodysection">
+
+            </div>
+
+          </div>
         </div>
       )}
 

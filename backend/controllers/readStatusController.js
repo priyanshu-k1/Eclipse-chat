@@ -78,6 +78,7 @@ exports.updateReadStatus = async (req, res) => {
         });
     }
 };
+// Updated batchUpdateReadStatus function - improved error handling and consistency
 exports.batchUpdateReadStatus = async (req, res) => {
     try {
         const { updates } = req.body;
@@ -90,6 +91,8 @@ exports.batchUpdateReadStatus = async (req, res) => {
 
         const bulkOps = [];
         const userIds = [];
+        
+        // Process each update and validate users exist
         for (const update of updates) {
             if (!update.eclipseId || !update.messageId) {
                 return res.status(400).json({
@@ -105,7 +108,6 @@ exports.batchUpdateReadStatus = async (req, res) => {
             }
 
             userIds.push(otherUser._id);
-
             bulkOps.push({
                 updateOne: {
                     filter: {
