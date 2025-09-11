@@ -7,6 +7,7 @@ import ParticlesBackground from './ParticlesBackground';
 import NotificationModal from './NotificationModal';
 import './MessageArea.css';
 import backgroundDoodle from '../assets/chatbackground.svg';
+import AddFriendPopup from './AddFriendPopup'
 
 const GalaxyStatusCard = ({ currentUser, accountStats, onlineUsers, connections }) => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
@@ -100,6 +101,11 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [connections, setConnections] = useState([]);
 
+  // Add friend popup states
+  const [relationshipStatus, setRelationshipStatus] = useState(null);
+  const [showAddFriendPopup, setShowAddFriendPopup] = useState(false);
+  const [isCheckingRelationship, setIsCheckingRelationship] = useState(false);
+
   // Notification modal state
   const [notification, setNotification] = useState({
     isOpen: false,
@@ -179,6 +185,88 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
         };
     }
   };
+
+// Check relationship status with selected user
+  const checkRelationshipStatus = async (userId) => {
+    if (!userId || !currentUser) return;
+    setIsCheckingRelationship(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:5001/api/orbits/check-relationship/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setRelationshipStatus(data.status);
+        setShowAddFriendPopup(data.status === 'none');
+      } else {
+        const errorData = await res.json();
+        console.error('Error checking relationship status:', errorData.message);
+        setRelationshipStatus('none');
+        setShowAddFriendPopup(true);
+      }
+    } catch (error) {
+      console.error('Error checking relationship status:', error);
+      setRelationshipStatus('none');
+      setShowAddFriendPopup(true);
+    } finally {
+      setIsCheckingRelationship(false);
+    }
+  };
+
+  // Send friend request
+  const handleSendFriendRequest = async () => {
+    if (!selectedUser || !currentUser) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5001/api/orbits/send-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          receiverId: selectedUser.id
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setRelationshipStatus('pending_sent');
+        setShowAddFriendPopup(false);
+        showNotification('Request Sent', `Orbit request sent to ${selectedUser.displayName}`, 'success');
+      } else {
+        const config = getNotificationConfig(data);
+        showNotification(config.title, data.message, config.type);
+      }
+    } catch (error) {
+      console.error('Error sending friend request:', error);
+      showNotification('Network Error', 'Failed to send orbit request', 'error');
+    }
+  };
+
+  // Handle closing add friend popup
+  const handleCloseAddFriendPopup = () => {
+    setShowAddFriendPopup(false);
+  };
+
+  // Check relationship status when selectedUser changes
+  useEffect(() => {
+    if (selectedUser && currentUser) {
+      // Reset states
+      setRelationshipStatus(null);
+      setShowAddFriendPopup(false);
+      
+      // Check relationship status
+      checkRelationshipStatus(selectedUser.id);
+    }
+  }, [selectedUser, currentUser]);
 
   // Improved scroll to bottom function
   const scrollToBottom = useCallback(() => {
@@ -527,6 +615,12 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
 
     if (!message.trim() || isSending || !selectedUser) return;
 
+    // Check if we can send messages (only if they're friends or have pending/accepted connection)
+    if (relationshipStatus === 'none') {
+      showNotification('Orbit Required', 'You need to establish an orbit connection to send messages', 'warning');
+      return;
+    }
+
     setIsSending(true);
     const messageToSend = message.trim();
     const optimisticMessage = {
@@ -694,6 +788,21 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     }
   };
 
+  // Get custom message for add friend popup based on relationship status
+  const getAddFriendMessage = () => {
+    if (!selectedUser) return '';
+    
+    const messages = [
+      `Ready to create an orbit with ${selectedUser.displayName}?`,
+      `Establish a cosmic connection with ${selectedUser.displayName}`,
+      `Begin your encrypted orbit with ${selectedUser.displayName}`,
+      `Connect across the galaxy with ${selectedUser.displayName}`,
+      `Create a stellar bond with ${selectedUser.displayName}`
+    ];
+    
+    return messages[Math.floor(Math.random() * messages.length)];
+  };
+
   if (!selectedUser) {
     return (
       <div className="message-area-container">
@@ -796,6 +905,17 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
         )}
       </div>
 
+      {/* Add Friend Popup - only show if not friends and not loading */}
+      {showAddFriendPopup && !isCheckingRelationship && relationshipStatus === 'none' && (
+        <AddFriendPopup 
+          onAccept={handleSendFriendRequest}
+          onClose={handleCloseAddFriendPopup}
+          username={selectedUser.displayName}
+          customMessage={getAddFriendMessage()}
+          isVisible={true}
+        />
+      )}
+
       <div className="message-input-container">
         <form onSubmit={handleSendMessage} className="message-form">
           <div className="input-wrapper">
@@ -804,18 +924,39 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
               value={message}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={`Send an encrypted message to ${selectedUser.displayName}...`}
+              placeholder={
+                relationshipStatus === 'none' 
+                  ? `Send an orbit request to ${selectedUser.displayName} to start messaging...`
+                  : relationshipStatus === 'pending_sent'
+                  ? `Waiting for ${selectedUser.displayName} to accept your orbit request...`
+                  : relationshipStatus === 'pending_received'
+                  ? `${selectedUser.displayName} sent you an orbit request. Check your notifications.`
+                  : `Send an encrypted message to ${selectedUser.displayName}...`
+              }
               className="message-input"
               rows="1"
-              disabled={isSending}
+              disabled={isSending || relationshipStatus === 'none' || relationshipStatus === 'pending_sent' || relationshipStatus === 'pending_received'}
             />
             <button
               type="submit"
-              className={`send-button ${message.trim() && !isSending ? 'active' : ''}`}
-              disabled={!message.trim() || isSending}
+              className={`send-button ${message.trim() && !isSending && relationshipStatus === 'friends' ? 'active' : ''}`}
+              disabled={!message.trim() || isSending || relationshipStatus !== 'friends'}
+              title={
+                relationshipStatus === 'none'
+                  ? 'Send orbit request first'
+                  : relationshipStatus === 'pending_sent'
+                  ? 'Waiting for orbit acceptance'
+                  : relationshipStatus === 'pending_received'
+                  ? 'Accept orbit request to send messages'
+                  : 'Send message'
+              }
             >
               {isSending ? (
                 <div className="send-spinner"></div>
+              ) : relationshipStatus === 'none' ? (
+                <i className="ph ph-user-plus"></i>
+              ) : relationshipStatus === 'pending_sent' || relationshipStatus === 'pending_received' ? (
+                <i className="ph ph-clock"></i>
               ) : (
                 <i className="ph ph-paper-plane-tilt"></i>
               )}

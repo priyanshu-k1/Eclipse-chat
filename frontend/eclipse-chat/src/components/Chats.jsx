@@ -516,8 +516,6 @@ const Chats = () => {
 
       const isNewConversation = newConversationIds.has(conversation.id);
       let hasUnreadMessages = false;
-      
-      // Only check for unread messages if the last message is NOT from the current user
       if (conversation.lastMessage && conversation.lastMessage.sender?.eclipseId !== user?.eclipseId) {
         const readStatus = readStatusMap.get(conversation.id);
         const lastSeenMessageId = readStatus?.lastSeenMessageId;

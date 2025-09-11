@@ -112,13 +112,16 @@ const deleteUser = async (req, res) => {
     try {
         const userId = req.user.id;
         const { password } = req.body; 
+        
         if (!password) {
             return res.status(400).json({ message: 'Password confirmation is required to delete account' });
         }
+        
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
+        
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: 'Password is incorrect' });
@@ -127,11 +130,59 @@ const deleteUser = async (req, res) => {
             { friends: userId },
             { $pull: { friends: userId } }
         );
+        console.log('Removed user from friends lists');
+        const orbitDeleteResult = await Orbit.deleteMany({
+            $or: [
+                { senderId: userId },
+                { receiverId: userId }
+            ]
+        });
+        console.log(`Deleted ${orbitDeleteResult.deletedCount} orbit connections`);
+        const Message = require('../models/messageModel');
+        const messageDeleteResult = await Message.deleteMany({
+            $or: [
+                { sender: userId },
+                { receiver: userId }
+            ]
+        });
+        console.log(`Deleted ${messageDeleteResult.deletedCount} messages`);
+        const ReadStatus = require('../models/readStatusModel');
+        const readStatusDeleteResult = await ReadStatus.deleteMany({
+            $or: [
+                { userId: userId },
+                { conversationWith: userId }
+            ]
+        });
+        console.log(`Deleted ${readStatusDeleteResult.deletedCount} read status records`);
+        try {
+            const io = getSocketIO();
+            if (io) {
+                io.emit('userAccountDeleted', { 
+                    deletedUserId: userId,
+                    timestamp: new Date()
+                });
+            }
+        } catch (socketError) {
+            console.warn('Socket notification failed:', socketError.message);
+        }
         await User.findByIdAndDelete(userId);
-        res.status(200).json({ message: 'User account deleted successfully' });
+        console.log('User account deleted successfully');
+
+        res.status(200).json({ 
+            message: 'User account and all related data deleted successfully',
+            deletedData: {
+                orbitConnections: orbitDeleteResult.deletedCount,
+                messages: messageDeleteResult.deletedCount,
+                readStatuses: readStatusDeleteResult.deletedCount
+            }
+        });
+        
     } catch (error) {
-        console.error('Error deleting user:', error);
-        res.status(500).json({ message: 'Error deleting user account', error: error.message });
+        console.error('Error deleting user account:', error);
+        res.status(500).json({ 
+            message: 'Error deleting user account', 
+            error: error.message 
+        });
     }
 };
 

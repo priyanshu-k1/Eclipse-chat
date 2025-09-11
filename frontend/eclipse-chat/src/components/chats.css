@@ -410,6 +410,7 @@ body{
   padding: 2rem;
   opacity: 0.9;
   z-index:99;
+  user-select: none;
 }
 
 .empty-illustration {
