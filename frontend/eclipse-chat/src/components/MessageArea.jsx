@@ -787,8 +787,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
         return 'Offline';
     }
   };
-
-  // Get custom message for add friend popup based on relationship status
   const getAddFriendMessage = () => {
     if (!selectedUser) return '';
     
@@ -800,7 +798,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
       `Create a stellar bond with ${selectedUser.displayName}`
     ];
     
-    return messages[Math.floor(Math.random() * messages.length)];
+    return messages[0];
   };
 
   if (!selectedUser) {
@@ -904,8 +902,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
           </div>
         )}
       </div>
-
-      {/* Add Friend Popup - only show if not friends and not loading */}
       {showAddFriendPopup && !isCheckingRelationship && relationshipStatus === 'none' && (
         <AddFriendPopup 
           onAccept={handleSendFriendRequest}
@@ -934,32 +930,12 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
                   : `Send an encrypted message to ${selectedUser.displayName}...`
               }
               className="message-input"
-              rows="1"
-              disabled={isSending || relationshipStatus === 'none' || relationshipStatus === 'pending_sent' || relationshipStatus === 'pending_received'}
-            />
+              rows="1" />
             <button
               type="submit"
               className={`send-button ${message.trim() && !isSending && relationshipStatus === 'friends' ? 'active' : ''}`}
-              disabled={!message.trim() || isSending || relationshipStatus !== 'friends'}
-              title={
-                relationshipStatus === 'none'
-                  ? 'Send orbit request first'
-                  : relationshipStatus === 'pending_sent'
-                  ? 'Waiting for orbit acceptance'
-                  : relationshipStatus === 'pending_received'
-                  ? 'Accept orbit request to send messages'
-                  : 'Send message'
-              }
-            >
-              {isSending ? (
-                <div className="send-spinner"></div>
-              ) : relationshipStatus === 'none' ? (
-                <i className="ph ph-user-plus"></i>
-              ) : relationshipStatus === 'pending_sent' || relationshipStatus === 'pending_received' ? (
-                <i className="ph ph-clock"></i>
-              ) : (
-                <i className="ph ph-paper-plane-tilt"></i>
-              )}
+              title='Send message'>
+              <i className="ph ph-paper-plane-tilt"></i>
             </button>
           </div>
         </form>
