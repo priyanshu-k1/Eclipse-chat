@@ -12,7 +12,6 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
   const [isLogoutModalOpen,setLogoutModalOpen] = useState(false);
 
   useEffect(() => {
-    
     const handleEscapeKey = (event) => {
       if (event.key === 'Escape') {
         onClose();
@@ -20,7 +19,7 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
     };
 
     if (isOpen) {
-      // document.addEventListener('mousedown', handleClickOutside);
+      
       document.addEventListener('keydown', handleEscapeKey);
       document.body.style.overflow = 'hidden';
     }
@@ -31,7 +30,9 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
-  
+  useEffect(() => {
+    setIsAchivementOpen(true);
+  }, [isOpen]);
   useEffect(() => {
     window.openEditProfile = () => {
       setIsEditProfileOpen(true);
@@ -146,6 +147,12 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
       type: 'normal'
     },
     {
+      id: 'Sessions',
+      title: 'Manage Sessions',
+      description: 'Manage your active sessions',
+      icon: 'devices',
+    },
+    {
       id: 'logout',
       title: 'Log Out',
       description: 'Sign out of your account',
@@ -182,6 +189,20 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
         handleDeleteAccountClick();
       },
       type: 'danger'
+    },{
+      id:'Terms of Service',
+      title:'Terms of Service',
+      description:'Read our terms of service',
+      icon:'description',
+      action:()=>{window.open("http://localhost:5001/terms-of-service","_blank")},
+      type:'normal'
+    },{
+      id:'Privacy Policy',
+      title:'Privacy Policy',
+      description:'Read our privacy policy',
+      icon:'privacy_tip',
+      action:()=>{window.open("http://localhost:5001/privacy-policy","_blank")},
+      type:'normal'
     }
   ];
   const handleAchivementOpen=()=>{
@@ -262,7 +283,7 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
           </div>
           {
             isLogoutModalOpen && !isAchivementOpen && !isEditProfileOpen && !isDeleteModalOpen && (
-                <div className="logut-modal">
+                <div className="logout-modal">
                   <div className="logout-modal-header">
                     <h3>Preparing Your Escape Pod</h3>
                   </div>
@@ -270,7 +291,9 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
                     <p>Prepare for logout sequence — shall we launch?</p>
                     <div className="modal-button-area ">
                       <button className="cancel-logout-button modal-buttons" onClick={()=>{
+                        
                         setLogoutModalOpen(false);
+                        setIsAchivementOpen(true);
                       }}>Nevermind</button>
 
                       <button className="confirm-logout-button modal-buttons" onClick={()=>{
@@ -284,7 +307,7 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
             )
           }
 
-          {isAchivementOpen && !isEditProfileOpen && !isDeleteModalOpen && (
+          {isAchivementOpen && !isEditProfileOpen && !isDeleteModalOpen  && (
             <div className="userArea" >
               <div className="headersection">
                 <h1>Command Deck</h1>
@@ -297,11 +320,18 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
           )}
           <DeleteAccountModal
             isOpen={isDeleteModalOpen}
-            onClose={handleDeleteModalClose}
+            onClose={
+              ()=>{
+                handleDeleteModalClose();
+                setIsAchivementOpen(true);}
+            }
             onDeleteAccount={onDeleteAccount}/>
           <EditProfileModal
             isOpen={isEditProfileOpen}
-            onClose={() => setIsEditProfileOpen(false)}
+            onClose={() =>{
+              setIsEditProfileOpen(false)
+              setIsAchivementOpen(true);
+            } }
             user={propUser}
             onUpdateProfile={handleUpdateProfile}/>
         </div>
