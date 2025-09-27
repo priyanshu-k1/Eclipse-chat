@@ -26,7 +26,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
     font: 'Montserrat',
     backgroundColor: '#3B82F6',
     foregroundColor: '#FFFFFF',
-    useGradient: false, // Off by default
+    useGradient: false,
     gradientColor: '#9333EA'
   });
 
@@ -85,12 +85,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
 
   // Handle click outside and escape key
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-
+  
     const handleEscapeKey = (event) => {
       if (event.key === 'Escape') {
         onClose();
@@ -98,12 +93,10 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleEscapeKey);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscapeKey);
     };
   }, [isOpen, onClose]);
@@ -271,7 +264,6 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
 
   return (
     <>
-      <div className="edit-profile-overlay">
         <div className="edit-profile-modal" ref={modalRef}>
           {/* Header */}
           <div className="edit-profile-header">
@@ -568,7 +560,6 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
             </div>
           </form>
         </div>
-      </div>
       {successMessage && (
         <div className="success-toast">
           <div className="success-toast-content">

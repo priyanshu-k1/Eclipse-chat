@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './DeleteAccountModal.css';
+import bannerImage from '../assets/delete-section-banner.png'
+
 
 const DeleteAccountModal = ({ isOpen, onClose, onDeleteAccount }) => {
   const [password, setPassword] = useState('');
@@ -32,7 +34,12 @@ const DeleteAccountModal = ({ isOpen, onClose, onDeleteAccount }) => {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
-
+  useEffect(()=>{
+    setTimeout(() => {
+       setError('');
+    }, 5000);
+   
+  },[error])
   // Reset form when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
@@ -75,22 +82,21 @@ const DeleteAccountModal = ({ isOpen, onClose, onDeleteAccount }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="delete-account-overlay">
       <div className="delete-account-modal" ref={modalRef}>
         <div className="delete-modal-header">
           <div className="delete-icon">
             <span className="material-symbols-outlined">delete_forever</span>
           </div>
           <h2>Initiating self-destruct sequence.</h2>
-          <button className="close-button" onClick={onClose} disabled={isDeleting}>
-            <span className="material-symbols-outlined">close</span>
-          </button>
         </div>
-
+        <div className="banner-holder">
+          <img src={bannerImage} alt="good bye message image" />
+        </div>
         <div className="delete-modal-content">
+          
           <div className="sorry-message">
-            <p>Your journey with us has been a great one. We're sad to see your star fade. <i class="ph ph-heart"></i></p>
-            <p>This action will erase your cosmic footprint, all constellations (connections), and interstellar logs (conversations) forever. There is no recovery from the void.</p>
+              <p>Your journey with us has been a great one. We're sad to see your star fade. <i className="ph ph-heart"></i></p>
+              <p>This action will erase your cosmic footprint, all constellations (connections), and interstellar logs (conversations) forever. There is no recovery from the void.</p>
           </div>
 
           <div className="delete-form">
@@ -144,10 +150,16 @@ const DeleteAccountModal = ({ isOpen, onClose, onDeleteAccount }) => {
               </button>
             </div>
           </div>
-        </div>
+
+        </div> 
+        
+
+      
       </div>
-    </div>
   );
 };
 
 export default DeleteAccountModal;
+
+
+

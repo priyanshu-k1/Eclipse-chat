@@ -1,18 +1,18 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState} from 'react';
 import './UserMenuModal.css';
 import DeleteAccountModal from './DeleteAccountModal';
+import EditProfileModal from './EditProfileModal';
 
-const UserMenuModal = ({ isOpen, onClose, user, onLogout, onDeleteAccount }) => {
+const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAccount }) => {
   const modalRef = useRef(null);
+  // const [user,setUser]=useState(user);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isAchivementOpen,setIsAchivementOpen] = useState(true);
+  const [isLogoutModalOpen,setLogoutModalOpen] = useState(false);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-
+    
     const handleEscapeKey = (event) => {
       if (event.key === 'Escape') {
         onClose();
@@ -20,25 +20,112 @@ const UserMenuModal = ({ isOpen, onClose, user, onLogout, onDeleteAccount }) => 
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      // document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleEscapeKey);
       document.body.style.overflow = 'hidden';
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      // document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscapeKey);
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
+  
+  useEffect(() => {
+    window.openEditProfile = () => {
+      setIsEditProfileOpen(true);
+      handleAchivementOpen();
+    };
+
+    return () => {
+      delete window.openEditProfile;
+    };
+  });
+
 
   const handleDeleteAccountClick = () => {
     setIsDeleteModalOpen(true);
-    onClose(); // Close the user menu modal
   };
 
   const handleDeleteModalClose = () => {
     setIsDeleteModalOpen(false);
+  };
+  
+  const handleUpdateProfile = async (updateData) => {
+    try {
+      const token = localStorage.getItem("token");
+      let response = { success: true, message: "Profile updated successfully" };
+
+      // Handle display name update
+      if (updateData.displayName) {
+        const res = await fetch("http://localhost:5001/api/users/update-displayName", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ displayName: updateData.displayName }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          return { success: false, message: data.message };
+        }
+      }
+
+      // Handle password update
+      if (updateData.currentPassword && updateData.newPassword) {
+        const res = await fetch("http://localhost:5001/api/users/update-password", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            oldPassword: updateData.currentPassword,
+            newPassword: updateData.newPassword
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          return { success: false, message: data.message };
+        }
+      }
+
+      if (updateData.avatarSettings) {
+        const { character, font, backgroundColor, foregroundColor, useGradient, gradientColor } = updateData.avatarSettings;
+        const cleanBg = backgroundColor?.replace('#', '') || '3B82F6';
+        const cleanFg = foregroundColor?.replace('#', '') || 'FFFFFF';
+        const cleanGradient = gradientColor?.replace('#', '') || '9333EA';
+
+        const bgParam = useGradient ? `${cleanBg},${cleanGradient}` : cleanBg;
+        const displayChar = character || 'EC';
+        const fontName = font || 'Montserrat';
+
+        const avatarUrl = `https://placehold.co/120x120/${bgParam}/${cleanFg}?text=${encodeURIComponent(displayChar)}&font=${encodeURIComponent(fontName)}`;
+        console.log(avatarUrl)
+
+        const res = await fetch("http://localhost:5001/api/users/update-profilePic", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ avatar: avatarUrl }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          return { success: false, message: data.message };
+        }
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Update profile error:", error);
+      return { success: false, message: "Network error. Please try again." };
+    }
   };
 
   const menuItems = [
@@ -48,10 +135,13 @@ const UserMenuModal = ({ isOpen, onClose, user, onLogout, onDeleteAccount }) => 
       description: 'Update your information',
       icon: 'person_4', 
       action: () => {
-        onClose();
-        if (window.openEditProfile) {
-          window.openEditProfile();
+        if(isDeleteModalOpen){
+            setIsDeleteModalOpen(false);
+          }
+        if(isAchivementOpen){
+            setIsAchivementOpen(false);
         }
+        setIsEditProfileOpen(true);
       },
       type: 'normal'
     },
@@ -61,8 +151,16 @@ const UserMenuModal = ({ isOpen, onClose, user, onLogout, onDeleteAccount }) => 
       description: 'Sign out of your account',
       icon: 'logout',
       action: () => {
-        onLogout();
-        onClose();
+        if(isEditProfileOpen){
+            setIsEditProfileOpen(false);
+          }
+        if(isDeleteModalOpen){
+            setIsDeleteModalOpen(false);
+          }
+        if(isAchivementOpen){
+            setIsAchivementOpen(false);
+        }
+        setLogoutModalOpen(true);
       },
       type: 'normal'
     },
@@ -71,35 +169,60 @@ const UserMenuModal = ({ isOpen, onClose, user, onLogout, onDeleteAccount }) => 
       title: 'Delete Account',
       description: 'Permanently remove account',
       icon: 'delete_forever',
-      action: handleDeleteAccountClick,
+      action:()=>{
+        if(isEditProfileOpen){
+            setIsEditProfileOpen(false);
+        }
+        if(isAchivementOpen){
+            setIsAchivementOpen(false);
+        }
+        if(isLogoutModalOpen){
+            setLogoutModalOpen(false);
+        }
+        handleDeleteAccountClick();
+      },
       type: 'danger'
     }
   ];
-
+  const handleAchivementOpen=()=>{
+    if(isEditProfileOpen){
+      setIsEditProfileOpen(false);
+    }
+    if(isDeleteModalOpen){
+      setIsDeleteModalOpen(false);
+    }
+    setIsAchivementOpen(!isAchivementOpen)
+  }
   if (!isOpen && !isDeleteModalOpen) return null;
 
   return (
     <>
       {isOpen && (
         <div className="user-menu-overlay">
+
+          <button className="close-button" onClick={onClose}>
+              <span className='material-symbols-outlined'>close</span> 
+          </button>
+
           <div className="user-menu-modal" ref={modalRef}>
             {/* Header */}
             <div className="user-menu-header">
               <div className="user-info">
                 <div className="user-avatar-large">
-                  <img src={user?.avatar} alt="User Avatar" />
+                  <img src={propUser?.avatar} alt="User Avatar" />
                   <div className="status-indicator"></div>
                   <div className="user-details">
-                    <h3 className="user-display-name">{user?.displayName || "User"}</h3>
+                    <h3 className="user-display-name">{propUser?.displayName || "User"}</h3>
                     <div className="user-clipboard">
-                      <p className="modal-user-name">{user?.eclipseId || "Celestial ID"} </p>
-                      <i className="ph ph-clipboard" title='Copy to clipboard'  onClick={() => navigator.clipboard.writeText(user?.eclipseId || "NULL")}></i>
+                      <p className="modal-user-name">{propUser?.eclipseId || "Celestial ID"} </p>
+                      <i className="ph ph-clipboard" title='Copy to clipboard'  onClick={() => navigator.clipboard.writeText(propUser?.eclipseId || "NULL")}></i>
                     </div>
+                    
                 </div>
                 </div>
               </div>
-              <button className="close-button" onClick={onClose}>
-                <span className='material-symbols-outlined'>close</span> 
+              <button className={isAchivementOpen?"hide-achivement-button":"achivement-button"} onClick={handleAchivementOpen} title={isAchivementOpen?'Hide achivement':'Show achivement'}>
+                <span className="material-symbols-outlined">workspace_premium</span>
               </button>
             </div>
 
@@ -126,6 +249,9 @@ const UserMenuModal = ({ isOpen, onClose, user, onLogout, onDeleteAccount }) => 
               ))}
             </div>
 
+
+            
+        
             {/* Footer */}
             <div className="user-menu-footer">
               <div className="encryption-status">
@@ -134,26 +260,52 @@ const UserMenuModal = ({ isOpen, onClose, user, onLogout, onDeleteAccount }) => 
               </div>
             </div>
           </div>
+          {
+            isLogoutModalOpen && !isAchivementOpen && !isEditProfileOpen && !isDeleteModalOpen && (
+                <div className="logut-modal">
+                  <div className="logout-modal-header">
+                    <h3>Preparing Your Escape Pod</h3>
+                  </div>
+                  <div className="logout-modal-content">
+                    <p>Prepare for logout sequence — shall we launch?</p>
+                    <div className="modal-button-area ">
+                      <button className="cancel-logout-button modal-buttons" onClick={()=>{
+                        setLogoutModalOpen(false);
+                      }}>Nevermind</button>
 
-          <div className="userArea">
-            <div className="headersection">
-              <h1>Command Deck</h1>
-            <p>Welcome back, Commander <b>{user?.displayName || "Stargazer"}</b>. Your mission records await.</p>
+                      <button className="confirm-logout-button modal-buttons" onClick={()=>{
+                        setLogoutModalOpen(false);
+                        onLogout();
+                        onClose();
+                      }}>Logout</button>
+                    </div>
+                  </div>
+                </div>
+            )
+          }
+
+          {isAchivementOpen && !isEditProfileOpen && !isDeleteModalOpen && (
+            <div className="userArea" >
+              <div className="headersection">
+                <h1>Command Deck</h1>
+                <p>Welcome back, Commander <b>{propUser?.displayName || "Stargazer"}</b>. Your mission records await.</p>
+              </div>
+              <div className="bodysection">
+
+              </div>
             </div>
-            <div className="bodysection">
-
-            </div>
-
-          </div>
+          )}
+          <DeleteAccountModal
+            isOpen={isDeleteModalOpen}
+            onClose={handleDeleteModalClose}
+            onDeleteAccount={onDeleteAccount}/>
+          <EditProfileModal
+            isOpen={isEditProfileOpen}
+            onClose={() => setIsEditProfileOpen(false)}
+            user={propUser}
+            onUpdateProfile={handleUpdateProfile}/>
         </div>
-      )}
-
-      {/* Delete Account Modal */}
-      <DeleteAccountModal
-        isOpen={isDeleteModalOpen}
-        onClose={handleDeleteModalClose}
-        onDeleteAccount={onDeleteAccount}
-      />
+      )}      
     </>
   );
 };

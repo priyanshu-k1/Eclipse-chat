@@ -926,6 +926,10 @@ body{
   color: #B0B0B0;
   font-weight: 300;
 }
+.logout-modal{
+  width:10rem;
+  height:10rem;
+}
 
 /* Animation for new conversations only */
 @keyframes slideInConversation {

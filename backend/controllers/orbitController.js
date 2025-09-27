@@ -7,40 +7,65 @@ const sendConnectionRequest = async (req, res) => {
     try {
         const senderId = req.user.id;
         const { receiverId } = req.body;
-
+        
         if (!receiverId) {
             return res.status(400).json({ message: 'Receiver ID is required' });
         }
-
+        
         if (senderId === receiverId) {
             return res.status(400).json({ message: 'You cannot send a request to yourself' });
         }
+        
         const receiver = await User.findById(receiverId);
         if (!receiver) {
             return res.status(404).json({ message: 'User not found' });
         }
-
-        // CORRECTED: Only check for pending or accepted requests
-        const existingRequest = await Orbit.findOne({
+        
+        // Check if users are already connected (accepted orbit exists)
+        const existingConnection = await Orbit.findOne({
             $or: [
                 { senderId, receiverId },
                 { senderId: receiverId, receiverId: senderId }
             ],
-            status: { $in: ['pending', 'accepted'] } // Only consider active connections
+            status: 'accepted'
         });
-
-        if (existingRequest) {
-            return res.status(400).json({ message: 'Connection request already exists' });
+        
+        if (existingConnection) {
+            return res.status(400).json({ message: 'Users are already connected' });
         }
-
+        
+        // Check if there's already a pending request from this sender to receiver
+        const existingPendingRequest = await Orbit.findOne({
+            senderId,
+            receiverId,
+            status: 'pending'
+        });
+        
+        if (existingPendingRequest) {
+            return res.status(400).json({ message: 'Connection request already sent' });
+        }
+        
+        // Check if there's a pending request from receiver to sender
+        const reversePendingRequest = await Orbit.findOne({
+            senderId: receiverId,
+            receiverId: senderId,
+            status: 'pending'
+        });
+        
+        if (reversePendingRequest) {
+            return res.status(400).json({ 
+                message: 'This user has already sent you a connection request. Please check your pending requests.' 
+            });
+        }
+        
         const newOrbit = new Orbit({
             senderId,
             receiverId,
             status: 'pending'
         });
-
+        
         await newOrbit.save();
-
+        
         res.status(201).json({
             message: 'Connection request sent successfully',
             orbit: {
@@ -50,6 +75,7 @@ const sendConnectionRequest = async (req, res) => {
                 status: newOrbit.status
             }
         });
+        
     } catch (error) {
         console.error('Error sending connection request:', error);
         res.status(500).json({ message: 'Error sending connection request', error: error.message });
