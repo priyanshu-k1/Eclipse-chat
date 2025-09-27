@@ -10,7 +10,11 @@ const {
     getPendingRequests,
     getConnections,
     getOnlineUsers,
-    getUserAccountStats
+    getUserAccountStats,
+    getActiveSessions, 
+    terminateSession, 
+    terminateAllOtherSessions, 
+    getSessionInfo 
 } = require('../controllers/userController');
 
 const { authenticate } = require('../middleware/authMiddleware');
@@ -25,5 +29,9 @@ router.get('/search', authenticate, searchUsers);
 router.get('/pending', authenticate, getPendingRequests);
 router.get('/connections', authenticate, getConnections);
 router.get('/online-users', authenticate, getOnlineUsers);
+router.get('/sessions', authenticate, getActiveSessions);
+router.get('/sessions/info', authenticate, getSessionInfo);
+router.delete('/sessions/:sessionId', authenticate, terminateSession);
+router.delete('/sessions/others/all', authenticate, terminateAllOtherSessions);
 
 module.exports = router;

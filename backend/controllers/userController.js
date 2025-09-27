@@ -2,6 +2,9 @@ const User = require('../models/userModel');
 const Orbit = require('../models/orbitModel');
 const bcrypt = require('bcryptjs');
 const { getSocketIO } = require('../socket/socketHandler');
+const UAParser = require('ua-parser-js');
+
+
 
 const updateDisplayName = async (req, res) => {
     try {
@@ -404,6 +407,132 @@ const getUserAccountStatsData = async (userId) => {
         throw new Error(`Error retrieving account stats: ${error.message}`);
     }
 };
+const getActiveSessions = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        const user = await User.findById(userId).select('tokens');
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const sessions = user.tokens.map(tokenObj => {
+            const parser = new UAParser(tokenObj.userAgent);
+            const result = parser.getResult();
+            
+            return {
+                id: tokenObj._id,
+                device: tokenObj.device,
+                browser: `${result.browser.name || 'Unknown'} ${result.browser.version || ''}`.trim(),
+                os: `${result.os.name || 'Unknown'} ${result.os.version || ''}`.trim(),
+                createdAt: tokenObj.createdAt,
+                isCurrent: tokenObj.token === req.token,
+                location: 'Unknown' // You can integrate IP geolocation service here if needed
+            };
+        });
+
+        res.status(200).json({
+            message: 'Active sessions retrieved successfully',
+            sessions,
+            count: sessions.length
+        });
+    } catch (error) {
+        console.error('Error getting active sessions:', error);
+        res.status(500).json({ 
+            message: 'Error retrieving active sessions', 
+            error: error.message 
+        });
+    }
+};
+// Session management functions
+const terminateSession = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { sessionId } = req.params;
+
+        const user = await User.findById(userId);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const sessionExists = user.tokens.find(tokenObj => tokenObj._id.toString() === sessionId);
+        
+        if (!sessionExists) {
+            return res.status(404).json({ message: 'Session not found' });
+        }
+        if (sessionExists.token === req.token) {
+            return res.status(400).json({ message: 'Cannot terminate current session. Use logout instead.' });
+        }
+
+        user.tokens = user.tokens.filter(tokenObj => tokenObj._id.toString() !== sessionId);
+        await user.save();
+
+        res.status(200).json({ 
+            message: 'Session terminated successfully'
+        });
+    } catch (error) {
+        console.error('Error terminating session:', error);
+        res.status(500).json({ 
+            message: 'Error terminating session', 
+            error: error.message 
+        });
+    }
+};
+
+const terminateAllOtherSessions = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        const user = await User.findById(userId);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const currentSession = user.tokens.find(tokenObj => tokenObj.token === req.token);
+        user.tokens = currentSession ? [currentSession] : [];
+        
+        await user.save();
+
+        res.status(200).json({ 
+            message: 'All other sessions terminated successfully'
+        });
+    } catch (error) {
+        console.error('Error terminating other sessions:', error);
+        res.status(500).json({ 
+            message: 'Error terminating other sessions', 
+            error: error.message 
+        });
+    }
+};
+
+const getSessionInfo = async (req, res) => {
+    try {
+        const userAgent = req.headers['user-agent'];
+        const parser = new UAParser(userAgent);
+        const result = parser.getResult();
+        
+        const sessionInfo = {
+            userAgent: userAgent || 'Unknown',
+            device: `${result.device.vendor || ''} ${result.device.model || ''} ${result.device.type || 'desktop'}`.trim() || 'Unknown Device',
+            browser: `${result.browser.name || 'Unknown'} ${result.browser.version || ''}`.trim(),
+            os: `${result.os.name || 'Unknown'} ${result.os.version || ''}`.trim(),
+            timestamp: new Date()
+        };
+
+        res.status(200).json({
+            message: 'Session info retrieved successfully',
+            sessionInfo
+        });
+    } catch (error) {
+        console.error('Error getting session info:', error);
+        res.status(500).json({ 
+            message: 'Error retrieving session info', 
+            error: error.message 
+        });
+    }
+};
 module.exports = {
     updateDisplayName,
     updatePassword,
@@ -416,5 +545,9 @@ module.exports = {
     getOnlineUsers,
     getUserAccountStats,
     getUserAccountStatsData,
-    formatAccountAge
+    formatAccountAge,
+    getActiveSessions,
+    terminateSession,
+    terminateAllOtherSessions,
+    getSessionInfo
 };

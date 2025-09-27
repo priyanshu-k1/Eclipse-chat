@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const displayNameGenerator = require('../micro-service/DisplayNameGenerator');
 const AvatarGenerator= require('../micro-service/AvatarGenerator').default;
+const UAParser = require('ua-parser-js');
 
 // Utility functions
 const generateToken = (user) => {
@@ -56,6 +57,17 @@ const authErrors = {
   "Token invalid": "Your session has expired, please login again",
   "jwt expired": "Your session has expired, please login again",
   "jwt malformed": "Invalid authentication token"
+};
+const parseUserAgent = (userAgent) => {
+  const parser = new UAParser(userAgent);
+  const result = parser.getResult();
+  
+  return {
+    userAgent: userAgent || 'Unknown',
+    device: `${result.device.vendor || ''} ${result.device.model || ''} ${result.device.type || 'desktop'}`.trim() || 'Unknown Device',
+    browser: `${result.browser.name || 'Unknown'} ${result.browser.version || ''}`.trim(),
+    os: `${result.os.name || 'Unknown'} ${result.os.version || ''}`.trim()
+  };
 };
 
 // Helper function to get human readable error
@@ -125,12 +137,17 @@ exports.signup = async (req, res) => {
       email,
       password: hashedPassword,
       displayName: displayNameGenerator(),
-      avatar:AvatarGenerator(username)
+      avatar: AvatarGenerator(username)
     });
 
     await newUser.save();
+    const userAgentInfo = parseUserAgent(req.headers['user-agent']);
     const token = generateToken(newUser);
-    newUser.tokens.push({ token });
+    newUser.tokens.push({ 
+      token,
+      userAgent: userAgentInfo.userAgent,
+      device: userAgentInfo.device
+    });
     await newUser.save();
 
     res.status(201).json({
@@ -173,8 +190,16 @@ exports.signin = async (req, res) => {
         error: getHumanReadableError('Invalid credentials')
       });
     }
+
+    // Parse user agent information
+    const userAgentInfo = parseUserAgent(req.headers['user-agent']);
+    
     const token = generateToken(user);
-    user.tokens.push({ token });
+    user.tokens.push({ 
+      token,
+      userAgent: userAgentInfo.userAgent,
+      device: userAgentInfo.device
+    });
     await user.save();
 
     res.json({
@@ -198,7 +223,7 @@ exports.signin = async (req, res) => {
   }
 };
 
-// Logout endpoint (removes the current token from user's tokens array)
+
 exports.logout = async (req, res) => {
   try {
     req.user.tokens = req.user.tokens.filter(tokenObj => tokenObj.token !== req.token);
@@ -212,8 +237,6 @@ exports.logout = async (req, res) => {
     });
   }
 };
-
-// Logout from all devices (removes all tokens)
 exports.logoutAll = async (req, res) => {
   try {
     req.user.tokens = [];
