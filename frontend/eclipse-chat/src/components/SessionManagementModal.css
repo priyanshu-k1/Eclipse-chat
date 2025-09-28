@@ -21,10 +21,29 @@
     justify-content: center;
     flex-direction: column;
 }
+.success-toast{
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: rgba(52, 220, 99, 0.9);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: 'Montserrat', sans-serif;
+    z-index: 1000;
+    animation: fadeInOut 2s forwards;
+}
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(-20px); }
+    10% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-20px); }
+}
 .session-management-modal{
     border: 1px solid rgba(108, 99, 255, 0.3);
     background: linear-gradient(145deg, #0B0C10, #1F1F2E);
-    height:80%;
+    height:100%;
     width:100%;
     border-radius:12px;
     /* box-shadow: 0 0 20px rgba(108, 99, 255, 0.4); */
@@ -57,7 +76,7 @@
 }
 .modalContent{
     width:100%;
-    height:85%;
+    height:75%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -134,7 +153,7 @@
 
 .deviceCard{
     width:30%;
-    height:80%;
+    height:70%;
     border-radius: 12px;
     padding:0.4rem;
     border: 1px solid rgba(108, 99, 255, 0.3);
@@ -238,11 +257,28 @@
     font-weight:600;
     color:white;
 }
+
 .buttonArea{
     width:100%;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+.current-session-label{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top:0.4rem;
+    width:100%;
+    height:2rem;
+    border:none;
+    color:#8FA2B7;
+    font-size:0.9rem;
+    font-weight:600;
+    font-family: 'Roboto', sans-serif;
+    text-align: center;
+    justify-items: center;
+    border-top: 1px solid rgba(211, 210, 236, 0.3);
 }
 .terminateSession{
     margin-top:0.4rem;
@@ -263,11 +299,33 @@
     background: rgba(220, 52, 52, 0.3);
 }
 .floatingDock{
-    height:15%;
-    width:80%;
+    height:10%;
+    width:100%;
     border-radius:12px;
-    border: 1px solid rgba(108, 99, 255, 0.3);
-    background: linear-gradient(145deg, #0B0C10, #1F1F2E);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(21, 24, 36, 0.8);
+    border-top: 1px solid rgba(211, 210, 236, 0.3);
+}
+.terminateAllSession{
+    margin-top:0.4rem;
+    width:20%;
+    height:2rem;
+    border:none;
+    border-radius:8px;
+    background: rgba(220, 52, 52, 0.158);
+    border: solid 1px rgba(220, 52, 52, 0.3);
+    color:white;
+    font-size:0.7rem;
+    font-weight:600;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+    font-family: 'Montserrat', sans-serif;
+    text-align: center;
+}
+.terminateAllSession:hover{
+    background: rgba(220, 52, 52, 0.3);
 }
 
 

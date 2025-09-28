@@ -34,6 +34,10 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
   }, [isOpen, onClose]);
   useEffect(() => {
     setIsAchivementOpen(true);
+    setIsEditProfileOpen(false);
+    setIsDeleteModalOpen(false);
+    setLogoutModalOpen(false);
+    setIsSessionModalOpen(false);
   }, [isOpen]);
   useEffect(() => {
     window.openEditProfile = () => {
@@ -147,6 +151,9 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
         if(isAchivementOpen){
             setIsAchivementOpen(false);
         }
+        if(isSessionModalOpen){
+          setIsSessionModalOpen(false);
+        }
         setIsEditProfileOpen(true);
       },
       type: 'normal'
@@ -163,6 +170,9 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
         if(isDeleteModalOpen){
             setIsDeleteModalOpen(false);
           }
+        if(isLogoutModalOpen){
+            setLogoutModalOpen(false);
+        }
         if(isAchivementOpen){
             setIsAchivementOpen(false);
         }
@@ -185,6 +195,9 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
         if(isAchivementOpen){
             setIsAchivementOpen(false);
         }
+        if(isSessionModalOpen){
+          setIsSessionModalOpen(false);
+        }
         setLogoutModalOpen(true);
       },
       type: 'normal'
@@ -203,6 +216,9 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
         }
         if(isLogoutModalOpen){
             setLogoutModalOpen(false);
+        }
+        if(isSessionModalOpen){
+          setIsSessionModalOpen(false);
         }
         handleDeleteAccountClick();
       },
@@ -230,6 +246,9 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
     if(isDeleteModalOpen){
       setIsDeleteModalOpen(false);
     }
+    if(isSessionModalOpen){
+          setIsSessionModalOpen(false);
+        }
     setIsAchivementOpen(!isAchivementOpen)
   }
   if (!isOpen && !isDeleteModalOpen) return null;

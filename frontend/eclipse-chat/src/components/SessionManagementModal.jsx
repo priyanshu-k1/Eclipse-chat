@@ -70,9 +70,15 @@ const SessionManagementModal = ({isOpen}) => {
         }
         
         setSessions(prev => prev.filter(session => session.id !== sessionId));
+        const successMessage = document.createElement('div');
+        successMessage.textContent = 'Sessions terminated successfully';
+        successMessage.className = 'success-toast';
+        document.body.appendChild(successMessage);
         
         setTimeout(() => {
-           console.log('Session terminated successfully');
+           if (document.body.contains(successMessage)) {
+                document.body.removeChild(successMessage);
+            }
         }, 3000);
 
     } catch (err) {
@@ -206,47 +212,60 @@ const SessionManagementModal = ({isOpen}) => {
                             <span className="material-symbols-outlined">devices_off</span> 
                             <h2>No devices are currently connected.</h2>
                         </div>
-                    ):(
-                        <div className="deviceContainer">
-                            {sessions.map((session) => (
-                                <div className="deviceCard" key={session.id}>
-                                    <div className="session-meta">
-                                        <p className="session-time">
-                                            Started: {formatDate(session.createdAt)}
-                                        </p>
-                                        <p className={"session-status"+(session.isCurrent ? " Current CurrentPElement" : " Inactive InactivePElement")}>{session.isCurrent ? 'Current' : 'Inactive'}</p>
+                    )
+                    :(
+                    <div className="deviceContainer">
+                        {sessions.filter((session, index, self) => index === self.findIndex(s => s.id === session.id))
+                        .sort((a, b) => {
+                            if (a.isCurrent && !b.isCurrent) return -1;
+                            if (!a.isCurrent && b.isCurrent) return 1;
+                            return 0; // Keep original order for non-current sessions
+                        }).map((session) => (
+                            <div className="deviceCard" key={session.id}>
+                                <div className="session-meta">
+                                    <p className="session-time">
+                                        Started: {formatDate(session.createdAt)}
+                                    </p>
+                                    <p className={"session-status"+(session.isCurrent ? " Current CurrentPElement" : " Inactive InactivePElement")}>
+                                        {session.isCurrent ? 'Current' : 'Inactive'}
+                                    </p>
+                                </div>
+                                <div className="deviceIconholder">
+                                    <div className="innerHolder">
+                                        <span className={"deviceIcon material-symbols-outlined"+(session.isCurrent ? " CurrentIcon" : " InactiveIcon")}>
+                                            {getDeviceIcon(session.device)}
+                                        </span>
                                     </div>
-                                    <div className="deviceIconholder">
-                                        <div className="innerHolder">
-                                            <span className={"deviceIcon material-symbols-outlined"+(session.isCurrent ? " CurrentIcon" : " InactiveIcon")}>
-                                                {getDeviceIcon(session.device)}
-                                            </span>
-                                        </div>
-                                        <h4 className="device-name">{formatString(session.device) || 'Unknown Device'}</h4>
-                                    </div>
-                                    <div className="device-details">
-                                        <p className="browser-info">{session.browser || 'Unknown Browser'}</p>
-                                        <p className="os-info">{session.os || '`Unknown` OS'}</p>
-                                    </div>
-                                    <div className="buttonArea">
+                                    <h4 className="device-name">{formatString(session.device) || 'Unknown Device'}</h4>
+                                </div>
+                                <div className="device-details">
+                                    <p className="browser-info">{session.browser || 'Unknown Browser'}</p>
+                                    <p className="os-info">{session.os || 'Unknown OS'}</p>
+                                </div>
+                                <div className="buttonArea">
+                                    {!session.isCurrent && (
                                         <button className="terminateSession" onClick={() => terminateSession(session.id)}>
                                             Terminate Session
                                         </button>
-                                    </div>
+                                    )}
+                                    {session.isCurrent && (
+                                        <span className="current-session-label">Active on this device</span>
+                                    )}
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ))}
+                    </div>
                     )
                 )}
             </div>
-        </div>
-
-        <div className="floatingDock">
-                <button className="terminateAllSession"
-                onClick={terminateAllOtherSessions}>
-                    hello
+            <div className="floatingDock">
+                <button className="terminateAllSession" onClick={terminateAllOtherSessions}>
+                    Terminate All Other Sessions
                 </button>
         </div>
+        </div>
+
+        
     {/* <NotificationModal
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}
