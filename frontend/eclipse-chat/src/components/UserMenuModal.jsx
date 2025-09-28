@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState} from 'react';
 import './UserMenuModal.css';
 import DeleteAccountModal from './DeleteAccountModal';
 import EditProfileModal from './EditProfileModal';
+import SessionManagementModal from './SessionManagementModal';
 
 const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAccount }) => {
   const modalRef = useRef(null);
@@ -10,6 +11,7 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isAchivementOpen,setIsAchivementOpen] = useState(true);
   const [isLogoutModalOpen,setLogoutModalOpen] = useState(false);
+  const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
 
   useEffect(() => {
     const handleEscapeKey = (event) => {
@@ -44,6 +46,9 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
     };
   });
 
+  const handleSessionManagementClick = () => {
+        setIsSessionModalOpen(!isSessionModalOpen);
+  };
 
   const handleDeleteAccountClick = () => {
     setIsDeleteModalOpen(true);
@@ -151,6 +156,19 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
       title: 'Manage Sessions',
       description: 'Manage your active sessions',
       icon: 'devices',
+      action:()=>{
+        if(isEditProfileOpen){
+            setIsEditProfileOpen(false);
+          }
+        if(isDeleteModalOpen){
+            setIsDeleteModalOpen(false);
+          }
+        if(isAchivementOpen){
+            setIsAchivementOpen(false);
+        }
+        handleSessionManagementClick();
+      },
+      type: 'normal'
     },
     {
       id: 'logout',
@@ -318,6 +336,10 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
               </div>
             </div>
           )}
+          <SessionManagementModal 
+                isOpen={isSessionModalOpen} 
+                onClose={() => setIsSessionModalOpen(false)} 
+          />
           <DeleteAccountModal
             isOpen={isDeleteModalOpen}
             onClose={
