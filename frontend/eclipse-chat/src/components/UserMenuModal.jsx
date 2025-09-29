@@ -3,6 +3,7 @@ import './UserMenuModal.css';
 import DeleteAccountModal from './DeleteAccountModal';
 import EditProfileModal from './EditProfileModal';
 import SessionManagementModal from './SessionManagementModal';
+import LegalitiesModal from './LegalitiesModal'
 
 const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAccount }) => {
   const modalRef = useRef(null);
@@ -12,6 +13,8 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
   const [isAchivementOpen,setIsAchivementOpen] = useState(true);
   const [isLogoutModalOpen,setLogoutModalOpen] = useState(false);
   const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
+  const [isLegalitiesModalOpen, setIsLegalitiesModalOpen] = useState(false);
+  const [LegalitiesModalType,setLegalitiesModalType] = useState('terms');
 
   useEffect(() => {
     const handleEscapeKey = (event) => {
@@ -38,6 +41,8 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
     setIsDeleteModalOpen(false);
     setLogoutModalOpen(false);
     setIsSessionModalOpen(false);
+    setIsLegalitiesModalOpen(false);
+    setLegalitiesModalType('terms');
   }, [isOpen]);
   useEffect(() => {
     window.openEditProfile = () => {
@@ -154,6 +159,10 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
         if(isSessionModalOpen){
           setIsSessionModalOpen(false);
         }
+        if(isLegalitiesModalOpen){
+          setIsLegalitiesModalOpen(false);
+          setLegalitiesModalType('terms');
+        }
         setIsEditProfileOpen(true);
       },
       type: 'normal'
@@ -175,6 +184,10 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
         }
         if(isAchivementOpen){
             setIsAchivementOpen(false);
+        }
+        if(isLegalitiesModalOpen){
+            setIsLegalitiesModalOpen(false);
+            setLegalitiesModalType('terms');
         }
         handleSessionManagementClick();
       },
@@ -198,6 +211,10 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
         if(isSessionModalOpen){
           setIsSessionModalOpen(false);
         }
+        if(isLegalitiesModalOpen){
+          setIsLegalitiesModalOpen(false);
+          setLegalitiesModalType('terms');
+        }
         setLogoutModalOpen(true);
       },
       type: 'normal'
@@ -220,6 +237,10 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
         if(isSessionModalOpen){
           setIsSessionModalOpen(false);
         }
+        if(isLegalitiesModalOpen){
+          setIsLegalitiesModalOpen(false);
+          setLegalitiesModalType('terms');
+        }
         handleDeleteAccountClick();
       },
       type: 'danger'
@@ -228,14 +249,43 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
       title:'Terms of Service',
       description:'Read our terms of service',
       icon:'description',
-      action:()=>{window.open("http://localhost:5001/terms-of-service","_blank")},
+      action:()=>{
+        if(isDeleteModalOpen){
+            setIsDeleteModalOpen(false);
+          }
+        if(isAchivementOpen){
+            setIsAchivementOpen(false);
+        }
+        if(isSessionModalOpen){
+          setIsSessionModalOpen(false);
+        }
+        if(isEditProfileOpen){
+          setIsEditProfileOpen(false);
+        }
+        setLegalitiesModalType('terms')
+        setIsLegalitiesModalOpen(true)},
       type:'normal'
     },{
       id:'Privacy Policy',
       title:'Privacy Policy',
       description:'Read our privacy policy',
       icon:'privacy_tip',
-      action:()=>{window.open("http://localhost:5001/privacy-policy","_blank")},
+      action:()=>{
+        if(isDeleteModalOpen){
+            setIsDeleteModalOpen(false);
+          }
+        if(isAchivementOpen){
+            setIsAchivementOpen(false);
+        }
+        if(isSessionModalOpen){
+          setIsSessionModalOpen(false);
+        }
+        if(isEditProfileOpen){
+          setIsEditProfileOpen(false);
+        }
+        setLegalitiesModalType('privacy')
+        setIsLegalitiesModalOpen(true)
+      },
       type:'normal'
     }
   ];
@@ -249,6 +299,10 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
     if(isSessionModalOpen){
           setIsSessionModalOpen(false);
         }
+    if(isLegalitiesModalOpen){
+      setIsLegalitiesModalOpen(false);
+      setLegalitiesModalType('terms');
+    }
     setIsAchivementOpen(!isAchivementOpen)
   }
   if (!isOpen && !isDeleteModalOpen) return null;
@@ -291,9 +345,8 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
                   key={item.id}
                   className={`menu-item ${item.type}`}
                   onClick={item.action}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="menu-item-icon">
+                  style={{ animationDelay: `${index * 0.1}s` }}>
+                    <div className="menu-item-icon">
                     <span className='material-symbols-outlined'>{item.icon}</span>
                   </div>
                   <div className="menu-item-text">
@@ -306,10 +359,6 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
                 </button>
               ))}
             </div>
-
-
-            
-        
             {/* Footer */}
             <div className="user-menu-footer">
               <div className="encryption-status">
@@ -351,7 +400,9 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
                 <p>Welcome back, Commander <b>{propUser?.displayName || "Stargazer"}</b>. Your mission records await.</p>
               </div>
               <div className="bodysection">
-
+                <span className="material-symbols-outlined">construction</span>
+                    <h1>Work under Progress</h1>
+                    <p>Getting our Orbits right.</p>
               </div>
             </div>
           )}
@@ -359,6 +410,10 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
                 isOpen={isSessionModalOpen} 
                 onClose={() => setIsSessionModalOpen(false)} 
           />
+          <LegalitiesModal
+           isOpen={isLegalitiesModalOpen}
+            type={LegalitiesModalType}
+           />
           <DeleteAccountModal
             isOpen={isDeleteModalOpen}
             onClose={
@@ -374,7 +429,7 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
               setIsAchivementOpen(true);
             } }
             user={propUser}
-            onUpdateProfile={handleUpdateProfile}/>
+            onUpdateProfile={handleUpdateProfile}/> 
         </div>
       )}      
     </>

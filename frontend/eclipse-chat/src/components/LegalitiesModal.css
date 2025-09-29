@@ -1,0 +1,50 @@
+.legalities-modal{
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    background: linear-gradient(145deg, #0B0C10, #1F1F2E);
+    height:100%;
+    width:72%;
+    border-radius:12px;
+    /* box-shadow: 0 0 20px rgba(108, 99, 255, 0.4); */
+    overflow: hidden;
+}
+.legalities-header{
+    width:100%;
+    height:15%;
+    padding:0.3rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction: column;
+    background: rgba(21, 24, 36, 0.8);
+    border-bottom: 1px solid rgba(211, 210, 236, 0.3);
+}
+.legalities-content{
+    width:100%;
+    height:100%;
+}
+
+.textContent{
+    height: 85%;
+    overflow-y: auto;
+    padding: 1rem;
+}
+.textContent h3{
+    text-align: center;
+    margin-bottom:0.9rem;
+}
+.textContent::-webkit-scrollbar {
+  width: 4px;
+}
+
+.textContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.textContent::-webkit-scrollbar-thumb {
+  background: rgba(108, 99, 255, 0.3);
+  border-radius: 2px;
+}
+
+.textContent::-webkit-scrollbar-thumb:hover {
+  background: rgba(108, 99, 255, 0.5);
+}
