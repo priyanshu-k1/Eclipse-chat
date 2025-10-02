@@ -163,12 +163,7 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
     }
   };
 
-  // const handleOpenChat = (user) => {
-  //   onClose(); // Close the modal first
-  //   if (onUserSelect) {
-  //     onUserSelect(user); // Open chat with the selected user
-  //   }
-  // };
+ 
 
   const getInitials = (displayName) => {
     if (!displayName) return "?";
@@ -408,66 +403,52 @@ const ConnectionRequestsModal = ({ isOpen, onClose }) => {
   return (
     <div className="cosmic-overlay" onClick={onClose}>
       <div className="stellar-modal" onClick={(e) => e.stopPropagation()}>
-        {/* Modal Header */}
-        <div className="stellar-header">
-          <div className="stellar-header-content">
-            <div className="stellar-icon-container">
-              <i className="ph ph-planet"></i>
-            </div>
-            <div className="stellar-title-section">
-              <h2>Cosmic Network</h2>
-              <p>Manage your stellar connections</p>
-            </div>
+          <div className="stellar-header">
+              <div className="stellar-header-content">
+                <div className="stellar-icon-container">
+                  <i className="ph ph-planet"></i>
+                </div>
+                <div className="stellar-title-section">
+                  <h2>Cosmic Network</h2>
+                  <p>Manage your stellar connections</p>
+                </div>
+              </div>
+              <button className="stellar-close-btn" onClick={onClose}>
+                <i className="ph ph-x"></i>
+              </button>
           </div>
-          <button className="stellar-close-btn" onClick={onClose}>
-            <i className="ph ph-x"></i>
-          </button>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="stellar-navigation">
-          <button
-            className={`stellar-tab ${activeTab === 'pending' ? 'active' : ''}`}
-            onClick={() => setActiveTab('pending')}
-          >
-            <i className="ph ph-radio"></i>
-            <span>Incoming Signals</span>
-            {Array.isArray(pendingRequests) && pendingRequests.length > 0 && (
-              <span className="stellar-count">{pendingRequests.length}</span>
-            )}
-          </button>
-          <button
-            className={`stellar-tab ${activeTab === 'constellation' ? 'active' : ''}`}
-            onClick={() => setActiveTab('constellation')}
-          >
-            <i className="ph ph-star"></i>
-            <span>Constellation</span>
-            {Array.isArray(connections) && connections.length > 0 && (
-              <span className="stellar-count">{connections.length}</span>
-            )}
-          </button>
-          <button
-            className={`stellar-tab ${activeTab === 'blackhole' ? 'active' : ''}`}
-            onClick={() => setActiveTab('blackhole')}
-          >
-            <i className="ph ph-prohibit"></i>
-            <span>dwarf planet</span>
-            {Array.isArray(deniedRequests) && deniedRequests.length > 0 && (
-              <span className="stellar-count">{deniedRequests.length}</span>
-            )}
-          </button>
-        </div>
-
-        {/* Modal Content */}
-        <div className="stellar-content">
-          {renderTabContent()}
-        </div>
-
-        {/* Modal Footer */}
-        <div className="stellar-footer">
-          <p className="stellar-footer-text">
-            {getFooterText()}
-          </p>
+           <div className="stellar-navigation">
+            <button className={`stellar-tab ${activeTab === 'pending' ? 'active' : ''}`}onClick={() => setActiveTab('pending')}>
+              <i className="ph ph-radio"></i>
+                <span>Incoming Signals</span>
+                {Array.isArray(pendingRequests) && pendingRequests.length > 0 && (
+                  <span className="stellar-count">{pendingRequests.length}</span>
+                )}
+            </button>
+            <button
+              className={`stellar-tab ${activeTab === 'constellation' ? 'active' : ''}`}onClick={() => setActiveTab('constellation')}>
+              <i className="ph ph-star"></i>
+                <span>Constellation</span>
+                {Array.isArray(connections) && connections.length > 0 && (
+                  <span className="stellar-count">{connections.length}</span>
+                )}
+            </button>
+            <button
+              className={`stellar-tab ${activeTab === 'blackhole' ? 'active' : ''}`}onClick={() => setActiveTab('blackhole')}>
+              <i className="ph ph-prohibit"></i>
+                <span>dwarf planet</span>
+                {Array.isArray(deniedRequests) && deniedRequests.length > 0 && (
+                  <span className="stellar-count">{deniedRequests.length}</span>
+                )}
+            </button>
+          </div>
+          <div className="stellar-content">
+              {renderTabContent()}
+          </div>
+          <div className="stellar-footer">
+            <p className="stellar-footer-text">
+              {getFooterText()}
+            </p>
         </div>
       </div>
     </div>

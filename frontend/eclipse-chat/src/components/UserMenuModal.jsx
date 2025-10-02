@@ -67,81 +67,88 @@ const UserMenuModal = ({ isOpen, onClose, user: propUser, onLogout, onDeleteAcco
     setIsDeleteModalOpen(false);
   };
   
-  const handleUpdateProfile = async (updateData) => {
-    try {
-      const token = localStorage.getItem("token");
-      let response = { success: true, message: "Profile updated successfully" };
-
-      // Handle display name update
-      if (updateData.displayName) {
-        const res = await fetch("http://localhost:5001/api/users/update-displayName", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ displayName: updateData.displayName }),
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          return { success: false, message: data.message };
-        }
+const handleUpdateProfile = async (updateData) => {
+  try {
+    const token = localStorage.getItem("token");
+    const successMessages = [];
+    
+    // Handle display name update
+    if (updateData.displayName) {
+      const res = await fetch("http://localhost:5001/api/users/update-displayName", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ displayName: updateData.displayName }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, message: data.message };
       }
-
-      // Handle password update
-      if (updateData.currentPassword && updateData.newPassword) {
-        const res = await fetch("http://localhost:5001/api/users/update-password", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            oldPassword: updateData.currentPassword,
-            newPassword: updateData.newPassword
-          }),
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          return { success: false, message: data.message };
-        }
-      }
-
-      if (updateData.avatarSettings) {
-        const { character, font, backgroundColor, foregroundColor, useGradient, gradientColor } = updateData.avatarSettings;
-        const cleanBg = backgroundColor?.replace('#', '') || '3B82F6';
-        const cleanFg = foregroundColor?.replace('#', '') || 'FFFFFF';
-        const cleanGradient = gradientColor?.replace('#', '') || '9333EA';
-
-        const bgParam = useGradient ? `${cleanBg},${cleanGradient}` : cleanBg;
-        const displayChar = character || 'EC';
-        const fontName = font || 'Montserrat';
-
-        const avatarUrl = `https://placehold.co/120x120/${bgParam}/${cleanFg}?text=${encodeURIComponent(displayChar)}&font=${encodeURIComponent(fontName)}`;
-        console.log(avatarUrl)
-
-        const res = await fetch("http://localhost:5001/api/users/update-profilePic", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ avatar: avatarUrl }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          return { success: false, message: data.message };
-        }
-      }
-
-      return response;
-    } catch (error) {
-      console.error("Update profile error:", error);
-      return { success: false, message: "Network error. Please try again." };
+      successMessages.push("Username updated successfully");
     }
-  };
+    
+    // Handle password update
+    if (updateData.currentPassword && updateData.newPassword) {
+      const res = await fetch("http://localhost:5001/api/users/update-password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          oldPassword: updateData.currentPassword,
+          newPassword: updateData.newPassword
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, message: data.message };
+      }
+      successMessages.push("Password updated successfully");
+    }
+    
+    // Handle avatar update
+    if (updateData.avatarSettings) {
+      const { character, font, backgroundColor, foregroundColor, useGradient, gradientColor } = updateData.avatarSettings;
+      const cleanBg = backgroundColor?.replace('#', '') || '3B82F6';
+      const cleanFg = foregroundColor?.replace('#', '') || 'FFFFFF';
+      const cleanGradient = gradientColor?.replace('#', '') || '9333EA';
+      const bgParam = useGradient ? `${cleanBg},${cleanGradient}` : cleanBg;
+      const displayChar = character || 'EC';
+      const fontName = font || 'Montserrat';
+      const avatarUrl = `https://placehold.co/120x120/${bgParam}/${cleanFg}?text=${encodeURIComponent(displayChar)}&font=${encodeURIComponent(fontName)}`;
+      
+      console.log(avatarUrl);
+      
+      const res = await fetch("http://localhost:5001/api/users/update-profilePic", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ avatar: avatarUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, message: data.message };
+      }
+      successMessages.push("Avatar updated successfully");
+    }
+    
+    // Return appropriate message based on what was updated
+    const message = successMessages.length > 0 
+      ? successMessages.join(", ") 
+      : "Profile updated successfully";
+    
+    return { success: true, message };
+    
+  } catch (error) {
+    console.error("Update profile error:", error);
+    return { success: false, message: "Network error. Please try again." };
+  }
+};
 
   const menuItems = [
     {

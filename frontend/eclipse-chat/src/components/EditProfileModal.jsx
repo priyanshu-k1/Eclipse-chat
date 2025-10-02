@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './EditProfileModal.css';
+import NotificationModal from './NotificationModal';
 
 const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
   const modalRef = useRef(null);
@@ -22,12 +23,10 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
 
   // Initialize avatar settings with proper defaults
   const [avatarSettings, setAvatarSettings] = useState({
-    character: '', // Empty by default
+    character: '', 
     font: 'Montserrat',
     backgroundColor: '#3B82F6',
     foregroundColor: '#FFFFFF',
-    useGradient: false,
-    gradientColor: '#9333EA'
   });
 
   // Update avatar character when display name changes
@@ -45,41 +44,28 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
     }
   }, [formData.displayName]);
 
-  // Handle modal open/close - only reset when opening
+
   useEffect(() => {
     if (isOpen && !isInitialized) {
-      // Initialize form data
       setFormData({
         displayName: user?.displayName || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
-      
-      // Initialize avatar settings
+    
       setAvatarSettings({
-        character: user?.displayName?.[0]?.toUpperCase() || '', // Empty if no display name
+        character: user?.displayName?.[0]?.toUpperCase() || '', 
         font: 'Montserrat',
         backgroundColor: '#3B82F6',
         foregroundColor: '#FFFFFF',
-        useGradient: false, // Off by default
-        gradientColor: '#9333EA'
       });
-      
-      // Clear errors and messages
       setErrors({});
       setSuccessMessage('');
-      
-      // Reset to general tab only on initial open
       setActiveTab('general');
       setIsInitialized(true);
-      
-      // Prevent body scrolling
-      document.body.style.overflow = 'hidden';
     } else if (!isOpen) {
-      // Reset initialization flag when modal closes
       setIsInitialized(false);
-      document.body.style.overflow = 'unset';
     }
   }, [isOpen, user, isInitialized]);
 
@@ -132,7 +118,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
 
   // Fixed character input handler
   const handleCharacterChange = (e) => {
-    const value = e.target.value.slice(0, 2); // Limit to 2 characters
+    const value = e.target.value.slice(0, 2);
     setAvatarSettings(prev => ({
       ...prev,
       character: value.toUpperCase()
@@ -156,19 +142,11 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
   };
 
   const generateAvatarPreview = () => {
-    const { character, font, backgroundColor, foregroundColor, useGradient, gradientColor } = avatarSettings;
+    const { character, font, backgroundColor, foregroundColor} = avatarSettings;
     const cleanBg = backgroundColor.replace('#', '');
     const cleanFg = foregroundColor.replace('#', '');
-    const cleanGradient = gradientColor.replace('#', '');
-    
     const displayChar = character || '?';
-    
-    // Use your gradient format with bg parameter
-    if (useGradient) {
-      return `https://placehold.co/120x120/${cleanBg}/${cleanFg}?text=${encodeURIComponent(displayChar)}&font=${encodeURIComponent(font)}&bg=${cleanBg},${cleanGradient}&radius=50`;
-    } else {
       return `https://placehold.co/120x120/${cleanBg}/${cleanFg}?text=${encodeURIComponent(displayChar)}&font=${encodeURIComponent(font)}&radius=50`;
-    }
   };
 
   const validateForm = () => {
@@ -224,12 +202,10 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
       if (activeTab === 'avatar') {
         updateData.avatarSettings = avatarSettings;
       }
-
       const result = await onUpdateProfile(updateData);
 
       if (result.success) {
         setSuccessMessage(result.message);
-        
         if (activeTab === 'security') {
           setFormData(prev => ({
             ...prev,
@@ -238,10 +214,6 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
             confirmPassword: ''
           }));
         }
-
-        setTimeout(() => {
-          onClose();
-        }, 2000);
       } else {
         setErrors({ general: result.message });
       }
@@ -264,9 +236,8 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
 
   return (
     <>
-        <div className="edit-profile-modal" ref={modalRef}>
-          {/* Header */}
-          <div className="edit-profile-header">
+      <div className="edit-profile-modal" ref={modalRef}>
+        <div className="edit-profile-header">
             <div className="header-content">
               <h2>Edit Profile</h2>
               <p>Customize your Eclipse identity</p>
@@ -274,31 +245,29 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
             <button className="close-btn" onClick={onClose}>
               <span>✕</span>
             </button>
-          </div>
-
-          {/* Tab Navigation */}
-          <div className="tab-navigation">
+        </div>
+        <div className="tab-navigation">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.id)}
-              >
+                onClick={() => setActiveTab(tab.id)}>
                 <span className="tab-icon material-symbols-outlined">{tab.icon}</span>
                 <span className="tab-label">{tab.label}</span>
               </button>
             ))}
           </div>
-
-          {/* Content */}
           <form onSubmit={handleSubmit} className="edit-profile-content">
-            {activeTab === 'general' && (
+             {activeTab === 'general' && (
               <div className="tab-content">
                 <div className="form-section">
                   <h3>Personal Information</h3>
                   <div className="form-group">
                     <label htmlFor="displayName">Display Name</label>
                     <div className="input-container">
+                      <div className="input-icon">
+                        <span className='material-symbols-outlined'>person_4</span>
+                      </div>
                       <input
                         type="text"
                         id="displayName"
@@ -308,34 +277,30 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
                         placeholder="Enter your display name"
                         className={errors.displayName ? 'error' : ''}
                       />
-                      <div className="input-icon">
-                        <span className='material-symbols-outlined'>person_4</span>
-                      </div>
                     </div>
                     {errors.displayName && (
                       <span className="error-message">{errors.displayName}</span>
                     )}
                   </div>
-
                   <div className="form-group">
                     <label>Email Address</label>
                     <div className="input-container disabled">
+                      <div className="input-icon">
+                        <span className='material-symbols-outlined'>email</span>
+                      </div>
                       <input
                         type="email"
                         value={user?.email || ''}
                         disabled
                         placeholder="Email cannot be changed"
                       />
-                      <div className="input-icon">
-                        <span className='material-symbols-outlined'>email</span>
-                      </div>
+                     
                     </div>
                     <span className="input-note">Email address cannot be modified</span>
                   </div>
                 </div>
               </div>
             )}
-
             {activeTab === 'security' && (
               <div className="tab-content">
                 <div className="form-section">
@@ -424,7 +389,6 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
                 </div>
               </div>
             )}
-            
             {activeTab === 'avatar' && (
               <div className="tab-content">
                 <div className="form-section">
@@ -529,16 +493,6 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
                 </div>
               </div>
             )}
-
-            {/* General Error */}
-            {errors.general && (
-              <div className="general-error">
-                <span className="material-symbols-outlined">error</span>
-                <span>{errors.general}</span>
-              </div>
-            )}
-
-            {/* Footer */}
             <div className="edit-profile-footer">
               <button type="button" className="cancel-btn" onClick={onClose}>
                 Cancel
@@ -546,8 +500,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
               <button
                 type="submit"
                 className="save-btn"
-                disabled={isLoading}
-              >
+                disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <span className="loading-spinner"></span>
@@ -559,15 +512,18 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
               </button>
             </div>
           </form>
-        </div>
-      {successMessage && (
-        <div className="success-toast">
-          <div className="success-toast-content">
-            <span className="material-symbols-outlined">check_circle</span>
-            <span>{successMessage}</span>
-          </div>
-        </div>
-      )}
+      </div>
+      <NotificationModal
+        isOpen={!!(errors.general || successMessage)}
+        title={successMessage ? 'Success' : 'Error'}
+        message={successMessage || errors.general || ''}
+        type={successMessage ? 'success' : 'error'}
+        showImage={false}
+        onClose={() => {
+          setErrors({ general: null });
+          setSuccessMessage(null);
+        }}
+      />
     </>
   );
 };

@@ -8,7 +8,6 @@ import UserMenuModal from './UserMenuModal';
 import UserSearch from './UserSearch';
 import ConnectionRequestsModal from './ConnectionRequestsModal';
 import MessageArea from './MessageArea';
-import NotificationModal from './NotificationModal'
 
 const Chats = () => {
   const navigate = useNavigate();
