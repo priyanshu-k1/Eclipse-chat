@@ -8,6 +8,7 @@ import NotificationModal from './NotificationModal';
 import './MessageArea.css';
 import backgroundDoodle from '../assets/chatbackground.svg';
 import AddFriendPopup from './AddFriendPopup'
+import FileUpload from './FileUpload';
 
 const GalaxyStatusCard = ({ currentUser, accountStats, onlineUsers, connections }) => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
@@ -100,6 +101,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   const [accountStats, setAccountStats] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [connections, setConnections] = useState([]);
+  const [isFileUploadOpen, setFileUploadOpen] = useState(false);
 
   // Add friend popup states
   const [relationshipStatus, setRelationshipStatus] = useState(null);
@@ -911,10 +913,12 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
           isVisible={true}
         />
       )}
-
       <div className="message-input-container">
         <form onSubmit={handleSendMessage} className="message-form">
           <div className="input-wrapper">
+            <button className="sendButton" type='button' onClick={()=>{setFileUploadOpen(true)}}>
+              <i class="ph ph-paperclip"></i>
+            </button>
             <textarea
               ref={textareaRef}
               value={message}
@@ -941,7 +945,12 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
         </form>
       </div>
 
-      {/* Notification Modal */}
+      <FileUpload 
+        isOpen={isFileUploadOpen}
+        onClose={()=>{
+          setFileUploadOpen(false)
+        }}
+      />
       <NotificationModal
         isOpen={notification.isOpen}
         onClose={closeNotification}

@@ -76,7 +76,7 @@ const getHumanReadableError = (errorMessage) => {
 };
 
 // Validation rules
-exports.signupValidation = [
+const signupValidation = [
   body('username')
     .isLength({ min: 3 })
     .withMessage('Username must be at least 3 characters')
@@ -92,7 +92,7 @@ exports.signupValidation = [
     .withMessage('Password must be at least 6 characters')
 ];
 
-exports.signinValidation = [
+const signinValidation = [
   body('email')
     .isEmail()
     .withMessage('Please provide a valid email'),
@@ -103,7 +103,7 @@ exports.signinValidation = [
 ];
 
 // Validation middleware
-exports.validate = (req, res, next) => {
+const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const firstError = errors.array()[0];
@@ -115,7 +115,7 @@ exports.validate = (req, res, next) => {
   next();
 };
 
-exports.signup = async (req, res) => {
+const signup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
     const existingUser = await User.findOne({
@@ -171,7 +171,7 @@ exports.signup = async (req, res) => {
   }
 };
 
-exports.signin = async (req, res) => {
+const signin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -224,7 +224,7 @@ exports.signin = async (req, res) => {
 };
 
 
-exports.logout = async (req, res) => {
+const logout = async (req, res) => {
   try {
     req.user.tokens = req.user.tokens.filter(tokenObj => tokenObj.token !== req.token);
     await req.user.save();
@@ -237,7 +237,7 @@ exports.logout = async (req, res) => {
     });
   }
 };
-exports.logoutAll = async (req, res) => {
+const logoutAll = async (req, res) => {
   try {
     req.user.tokens = [];
     await req.user.save();
@@ -250,3 +250,13 @@ exports.logoutAll = async (req, res) => {
     });
   }
 };
+
+module.exports = {
+  signupValidation,
+  signinValidation,
+  validate,
+  signup,
+  signin,
+  logout,
+  logoutAll
+}

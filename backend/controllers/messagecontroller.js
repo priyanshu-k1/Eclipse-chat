@@ -3,7 +3,7 @@ const Orbit = require('../models/orbitModel');
 const findUserByEclipseId = require('../utils/findUserByEclipseId');
 const { encryptMessage, decryptMessage } = require('../micro-service/encryptionService');
 
-exports.sendMessage = async (req, res) => {
+const sendMessage = async (req, res) => {
     try {
         const { recipientEclipseId, content } = req.body;
         if (!recipientEclipseId || !content) {
@@ -123,7 +123,7 @@ exports.sendMessage = async (req, res) => {
     }
 };
 
-exports.acceptOrbit = async (req, res) => {
+const acceptOrbit = async (req, res) => {
     try {
         const { senderEclipseId } = req.body;
         
@@ -186,7 +186,7 @@ exports.acceptOrbit = async (req, res) => {
     }
 };
 
-exports.denyOrbit = async (req, res) => {
+const denyOrbit = async (req, res) => {
     try {
         const { senderEclipseId } = req.body;
         
@@ -236,7 +236,7 @@ exports.denyOrbit = async (req, res) => {
     }
 };
 
-exports.getConversation = async (req, res) => {
+const getConversation = async (req, res) => {
     try {
         const { eclipseId } = req.params;
         const { page = 1, limit = 50 } = req.query;
@@ -289,7 +289,7 @@ exports.getConversation = async (req, res) => {
     }
 };
 
-exports.getAllConversations = async (req, res) => {
+const getAllConversations = async (req, res) => {
     try {
         const conversations = await Message.aggregate([
             {
@@ -376,7 +376,7 @@ exports.getAllConversations = async (req, res) => {
     }
 };
 
-exports.saveMessage = async (req, res) => {
+const saveMessage = async (req, res) => {
     try {
         const { messageId } = req.params;
         
@@ -440,7 +440,7 @@ exports.saveMessage = async (req, res) => {
     }
 };
 
-exports.getSavedMessages = async (req, res) => {
+const getSavedMessages = async (req, res) => {
     try {
         const { page = 1, limit = 20 } = req.query;
         
@@ -487,7 +487,7 @@ exports.getSavedMessages = async (req, res) => {
     }
 };
 
-exports.unsaveMessage = async (req, res) => {
+const unsaveMessage = async (req, res) => {
     try {
         const { messageId } = req.params;
         
@@ -553,4 +553,16 @@ exports.unsaveMessage = async (req, res) => {
 
 function generateRoomId(eclipseId1, eclipseId2) {
     return [eclipseId1, eclipseId2].sort().join('_');
+}
+
+module.exports = {
+    sendMessage,
+    acceptOrbit,
+    denyOrbit,
+    getConversation,
+    getAllConversations,
+    saveMessage,
+    getSavedMessages,
+    unsaveMessage,
+    generateRoomId
 }

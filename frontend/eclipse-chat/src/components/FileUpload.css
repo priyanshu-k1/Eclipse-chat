@@ -1,0 +1,360 @@
+.fileUploadOverLay{
+    position: absolute;
+    height:100%;
+    width:100%;
+    background:rgba(18, 19, 28, 0.799);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content:center;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+.file-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    width: 100%;
+    min-height:80%;
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 10px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    
+}
+.closeButton{
+    position: absolute;
+    top:0.5rem;
+    left:0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #ffffff;
+    font-size: 14px;
+    background: #f0232333 ;
+    border-color: #ce080866;
+    font-size: larger;
+}
+.closeButton:hover {
+  border-radius:100%;
+  background: #f0232333 !important;
+  border-color: #ce080866 !important;
+  transform: rotate(90deg);
+}
+.upload-card { 
+  background: linear-gradient(135deg, rgba(108, 99, 255, 0.15), rgba(0, 194, 255, 0.08));
+  border: 1px solid rgba(108, 99, 255, 0.3);
+  border-radius: 20px;
+  padding: 30px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  height:100%;
+   box-shadow: 0 8px 22px rgba(150, 134, 236, 0.281);
+}
+
+.drop-zone {
+  border: 2px dashed rgba(108, 99, 255, 0.4);
+  border-radius: 16px;
+  padding: 50px 30px;
+  text-align: center;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  margin-top:1rem;
+  width:100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.fullDropBox{
+    height:100%;
+}
+.halfDropBox{
+    height:50%;
+}
+.drop-zone:hover {
+  border-color: rgba(108, 99, 255, 0.6);
+  background: rgba(108, 99, 255, 0.05);
+  border: 2px dashed rgba(23, 132, 222, 0.4);
+}
+
+.drop-zone.dragging {
+  border-color: #6c63ff;
+  background: rgba(108, 99, 255, 0.1);
+  transform: scale(1.02);
+}
+.upload-icon {
+  color: #6c63ff;
+  margin-bottom: 10px;
+  opacity: 0.9;
+  font-size:4rem;
+}
+
+.drop-title {
+  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+}
+
+.drop-subtitle {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.2rem;
+  margin-top:-0.5rem;
+}
+
+.files-display {
+    margin-top:1rem;
+    height:55%;
+    width:100%;
+    overflow: hidden;
+}
+.files-title {
+  color: #FFFFFF;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+}
+
+.files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  height:65%;
+  overflow-y: auto;
+  padding-right: 10px;
+  padding:1rem;
+}
+/* Custom Scrollbar */
+.files-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.files-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.files-list::-webkit-scrollbar-thumb {
+  background: rgba(108, 99, 255, 0.3);
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.files-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(108, 99, 255, 0.5);
+}
+
+.file-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(108, 99, 255, 0.2);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  width:100%;
+  min-height:7rem;
+  display: flex;
+  overflow: hidden;
+  animation: slideInItem 0.5s ease-out backwards;
+}
+.file-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(108, 99, 255, 0.4);
+}
+
+.fileIconSection{
+    height:100%;
+    width:10%;
+    padding:0.5rem;
+    border-right:2px solid rgba(108, 99, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.fileIconSection span{
+    font-size:3rem;
+    color: #6c63ff;
+    transition: all 0.2s ease-in-out !important;
+}
+.fileIconSection span:hover{
+    font-size:3.2rem;
+    color: #aeabe0;
+}
+.fileBody{
+    width:90%;
+    height:100%;
+}
+.fileDetails{
+    height:70%;
+    width:100%;
+    padding:0.3rem;
+    display: flex;
+    flex-direction: row;
+}
+.details{
+    width:80%;
+    height:100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.file-name {
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.file-size {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+}
+.CloseAction{
+    height:100%;
+    width:20%;
+    display: flex;
+    align-items: start;
+    justify-content:flex-end;
+}
+.remove-button {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.remove-button:hover {
+    border-radius:50%;
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+.progressArea{
+    width:100%;
+    height:30%;
+    display: flex;
+    padding:0.3rem;
+    flex-direction: row;
+    align-items: center;
+}
+.progress-bar-container{
+    width: 90%;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6c63ff, #00c2ff);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px rgba(108, 99, 255, 0.5);
+}
+.progressIcon{
+    height: 100%;
+    width:10%;
+    display: flex;
+    align-items:flex-end;
+    justify-content: center;
+    padding:0.2rem;
+}
+.progressIcon span{
+    font-size: 1.5rem;
+    animation: pulse-status 2s ease-in-out infinite;
+}
+.status-icon.success {
+  color: #4ade80 !important;
+  
+}
+.status-icon.error {
+  color: #ef4444;
+}
+.sendButtonAreaHidden{
+    display: none;
+}
+.sendButtonArea{
+    margin-top:-2rem;
+    height:40%;
+    width: 80%;
+    border-radius:12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.sendbutton{
+    background: linear-gradient(135deg, rgba(107, 99, 255, 0.612), rgba(0, 195, 255, 0.543));
+    width:30%;
+    height:90%;
+    border-radius: 12px;
+    border: solid 1px black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap:0.5rem;
+    transition: all 0.4s ease-in-out;
+}
+.sendbutton:hover{
+    transform: scale(1.1);
+    border: 1px solid rgba(159, 131, 219, 0.507);
+    background: linear-gradient(135deg, rgba(79, 72, 184, 0.642), rgb(83, 160, 182));
+}
+.sendbutton >span{
+    transition: all 0.5s ease-in-out;
+}
+.sendbutton:hover >span{
+    color: rgba(78, 39, 105, 0.938);
+    transform: translateX(6px) translateY(-5px);
+}
+
+@keyframes slideInItem {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes pulse-status {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
