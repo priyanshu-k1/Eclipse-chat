@@ -1,9 +1,4 @@
 const { Server } = require('socket.io');
-
-
-
-
-
 let ioInstance = null;
 const getSocketIO = () => {
     return ioInstance;
@@ -82,7 +77,51 @@ const initializeSocket = (server) => {
         timestamp: new Date()
       });
     });
-
+    // Handle message seen event
+    socket.on("message_seen", async (data) => {
+      try {
+        const { messageId, roomId, receiverId } = data;
+        console.log('Message seen event received:', { messageId, roomId, receiverId });
+        
+        // Dynamically import model to avoid circular dependency
+        const Message = require("../models/messageModel");
+        const message = await Message.findById(messageId);
+        
+        if (!message) {
+          console.log('Message not found:', messageId);
+          return;
+        }
+        
+        // Only mark as seen once
+        if (!message.isSeen) {
+          message.isSeen = true;
+          message.seenAt = new Date();
+          message.expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now
+          await message.save();
+          
+          console.log('Message marked as seen:', {
+            messageId,
+            seenAt: message.seenAt,
+            expiresAt: message.expiresAt
+          });
+          
+          // Notify both sender & receiver that message is seen
+          io.to(roomId).emit("message_seen_update", {
+            messageId,
+            receiverId,
+            seenAt: message.seenAt,
+            expiresAt: message.expiresAt, // Send expiresAt to frontend
+            expiresIn: "5 minutes",
+          });
+          
+          console.log(`Message ${messageId} seen by ${receiverId}, will expire at ${message.expiresAt}`);
+        } else {
+          console.log('Message already marked as seen:', messageId);
+        }
+      } catch (error) {
+        console.error("Error updating seen status:", error);
+      }
+    });
     // Handle manual status changes (online, away, busy, etc.)
     socket.on('change_status', (newStatus) => {
       const eclipseId = socket.eclipseId;
@@ -206,7 +245,7 @@ const initializeSocket = (server) => {
     });
   }, 60000);
 
-  // Expose method to get online users (useful for REST API endpoints)
+  //get online users
   io.getOnlineUsers = () => {
     return Array.from(onlineUsers.entries()).map(([id, data]) => ({
       eclipseId: id,
@@ -215,13 +254,16 @@ const initializeSocket = (server) => {
       lastSeen: data.lastSeen
     }));
   };
-
   return io;
 };
+
 
 // Helper function to generate consistent room IDs using eclipseIds
 function generateRoomId(eclipseId1, eclipseId2) {
   return [eclipseId1, eclipseId2].sort().join('_');
 }
 
-module.exports = { initializeSocket, getSocketIO };
+module.exports = { 
+  initializeSocket,
+  getSocketIO 
+};

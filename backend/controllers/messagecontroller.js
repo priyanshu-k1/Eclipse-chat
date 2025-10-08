@@ -8,16 +8,19 @@ const sendMessage = async (req, res) => {
         const { recipientEclipseId, content } = req.body;
         if (!recipientEclipseId || !content) {
             return res.status(400).json({ 
-                message: 'Recipient Eclipse ID and content are required' 
+                message: 'Recipient Eclipse ID and content are required',
+                type: 'validation_error'
             });
         }
         
         const recipient = await findUserByEclipseId(recipientEclipseId);
         if (!recipient) {
             return res.status(404).json({ 
-                message: 'Recipient not found' 
+                message: 'Recipient not found',
+                type: 'user_not_found'
             });
         }
+        
         const userFriends = req.user.friends || [];
         const recipientFriends = recipient.friends || [];
         
@@ -71,9 +74,11 @@ const sendMessage = async (req, res) => {
             content: encryptedData,
             iv,
             authTag,
-            expiresAt: Date.now() + 5 * 60 * 1000,
+            expiresAt: null,
             isSavedBySender: false,
-            isSavedByReceiver: false
+            isSavedByReceiver: false,
+            isSeen: false,
+            seenAt: null
         });
 
         const savedMessage = await message.save();
@@ -98,7 +103,9 @@ const sendMessage = async (req, res) => {
                 timestamp: savedMessage.createdAt,
                 expiresAt: savedMessage.expiresAt,
                 isSavedBySender: savedMessage.isSavedBySender,
-                isSavedByReceiver: savedMessage.isSavedByReceiver
+                isSavedByReceiver: savedMessage.isSavedByReceiver,
+                isSeen: savedMessage.isSeen || false,
+                seenAt: savedMessage.seenAt || null
             };
             
             io.to(roomId).emit('receive_message', messageData);
@@ -258,6 +265,7 @@ const getConversation = async (req, res) => {
         .sort({ createdAt: -1 })
         .limit(limit * 1)
         .skip((page - 1) * limit);
+        
         const decryptedMessages = messages.map(message => ({
             id: message._id,
             content: decryptMessage(message.content, message.iv, message.authTag),
@@ -266,7 +274,9 @@ const getConversation = async (req, res) => {
             timestamp: message.createdAt,
             expiresAt: message.expiresAt,
             isSavedBySender: message.isSavedBySender,
-            isSavedByReceiver: message.isSavedByReceiver
+            isSavedByReceiver: message.isSavedByReceiver,
+            isSeen: message.isSeen || false,      
+            seenAt: message.seenAt || null   
         }));
 
         res.json({

@@ -1,6 +1,9 @@
 .user-search-container {
   position: relative;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap:0.5rem;
 }
 .search-input-container {
   position: relative;
@@ -185,7 +188,6 @@
   z-index: 30;
   box-sizing: border-box;
 }
-/* Change color and design later */
 .suggestion-action.add-friend {
   background: #2196f3 !important;
   color: white !important;

@@ -46,10 +46,12 @@ const messageSchema = new mongoose.Schema({
 { timestamps: true });
 
 messageSchema.methods.markAsSeen = async function () {
-  this.isSeen = true;
-  this.seenAt = new Date();
-  this.expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-  await this.save();
+  if (!this.isSeen) {
+    this.isSeen = true;
+    this.seenAt = new Date();
+    this.expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    await this.save();
+  }
 };
 
 module.exports = mongoose.model('Message', messageSchema);

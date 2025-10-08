@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
 import MessageBubble from './MessageBubble';
-import ParticlesBackground from './ParticlesBackground';
 import NotificationModal from './NotificationModal';
 import './MessageArea.css';
 import backgroundDoodle from '../assets/chatbackground.svg';
@@ -188,7 +187,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     }
   };
 
-// Check relationship status with selected user
+  // Check relationship status with selected user
   const checkRelationshipStatus = async (userId) => {
     if (!userId || !currentUser) return;
     setIsCheckingRelationship(true);
@@ -271,19 +270,19 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   }, [selectedUser, currentUser]);
 
   // Improved scroll to bottom function
-  const scrollToBottom = useCallback(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
-  }, []);
+  // const scrollToBottom = useCallback(() => {
+  //   if (messagesContainerRef.current) {
+  //     messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    if (messages.length > 0) {
-      setTimeout(() => {
-        scrollToBottom();
-      }, 50);
-    }
-  }, [messages, scrollToBottom]);
+  // useEffect(() => {
+  //   if (messages.length > 0) {
+  //     setTimeout(() => {
+  //       scrollToBottom();
+  //     }, 50);
+  //   }
+  // }, [messages, scrollToBottom]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -400,6 +399,34 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
       }
     });
 
+    // Listen for message seen updates
+    socketRef.current.on('message_seen_update', (data) => {
+      const { messageId, seenAt, expiresAt } = data;
+      console.log('Message seen update received:', messageId, { seenAt, expiresAt });
+      
+      setMessages(prevMessages =>
+        prevMessages.map(msg => {
+          if (msg.id === messageId) {
+            const updatedMsg = { 
+              ...msg, 
+              isSeen: true, 
+              seenAt: seenAt,
+              expiresAt: expiresAt || msg.expiresAt // Use new expiresAt if provided
+            };
+            
+            console.log('Updated message state:', updatedMsg);
+            
+            // NOW set up expiration timeout since message is seen
+            if (updatedMsg.expiresAt) {
+              setupMessageExpirationTimeout(updatedMsg);
+            }
+            
+            return updatedMsg;
+          }
+          return msg;
+        })
+      );
+    });
     // Listen for online users list
     socketRef.current.on('online_users_list', (onlineUsers) => {
       if (selectedUser) {
@@ -461,6 +488,10 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
 
   const setupMessageExpirationTimeout = useCallback((messageData) => {
     if (!messageData.expiresAt) return;
+    if (!messageData.isSeen) {
+      console.log(`Message ${messageData.id} not seen yet, skipping expiration setup`);
+      return;
+    }
 
     const expirationTime = new Date(messageData.expiresAt);
     const currentTime = new Date();
@@ -475,6 +506,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
       }, timeUntilExpiration);
 
       messageExpirationTimeoutsRef.current.set(messageData.id, timeoutId);
+      console.log(`Message ${messageData.id} will expire in ${Math.round(timeUntilExpiration / 1000)}s`);
     } else {
       setMessages(prevMessages =>
         prevMessages.filter(msg => msg.id !== messageData.id)
@@ -517,6 +549,55 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     }
   }, [selectedUser, setupMessageExpirationTimeout]);
 
+  const markMessageAsSeen = useCallback(async (messageId) => {
+    if (!messageId || !selectedUser || !socketRef.current) return;
+
+    try {
+      const roomId = [currentUser.eclipseId, selectedUser.eclipseId].sort().join('_');
+      
+      console.log('Marking message as seen:', messageId);
+      // Emit socket event to mark message as seen
+      socketRef.current.emit('message_seen', {
+        messageId,
+        roomId,
+        receiverId: currentUser.eclipseId
+      });
+    } catch (error) {
+      console.error('Error marking message as seen:', error);
+    }
+  }, [selectedUser, currentUser]);
+
+  // Intersection Observer for marking messages as seen
+  useEffect(() => {
+    if (!selectedUser || messages.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const messageId = entry.target.dataset.messageId;
+            const message = messages.find(msg => msg.id === messageId);
+            if (message && 
+                message.sender.eclipseId !== currentUser.eclipseId && 
+                !message.isSeen) {
+              console.log("Message is visible and should be marked as seen:", messageId);
+              markMessageAsSeen(messageId);
+            }
+          }
+        });
+      },
+      {
+        root: messagesContainerRef.current,
+        threshold: 0.5
+      }
+    );
+    
+    const messageElements = document.querySelectorAll('[data-message-id]');
+    messageElements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [messages, selectedUser, currentUser, markMessageAsSeen]);
+
   useEffect(() => {
     if (selectedUser) {
       setIsLoading(true);
@@ -550,7 +631,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   }, [removeExpiredMessages]);
 
   const handleSaveMessage = async (messageId) => {
-    console.log(messageId)
     try {
       const token = localStorage.getItem("token");
       const targetMessage = messages.find(msg => msg.id === messageId);
@@ -789,6 +869,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
         return 'Offline';
     }
   };
+
   const getAddFriendMessage = () => {
     if (!selectedUser) return '';
     
@@ -917,7 +998,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
         <form onSubmit={handleSendMessage} className="message-form">
           <div className="input-wrapper">
             <button className="sendButton" type='button' onClick={()=>{setFileUploadOpen(true)}}>
-              <i class="ph ph-paperclip"></i>
+              <i className="ph ph-paperclip"></i>
             </button>
             <textarea
               ref={textareaRef}

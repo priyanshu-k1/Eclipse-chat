@@ -20,11 +20,93 @@ const Chats = () => {
   const [setShowSearch] = useState(false);
   const [conversations, setConversations] = useState([]);
   const [conversationsLoading, setConversationsLoading] = useState(false);
+  const [isActive, setActiveTab] = useState('convoTab');
 
   const [readStatusMap, setReadStatusMap] = useState(new Map());
   const prevConversationsRef = useRef([]);
   const [newConversationIds, setNewConversationIds] = useState(new Set());
   const [unreadConversations, setUnreadConversations] = useState(new Set());
+
+  const [contextMenu, setContextMenu] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    conversation: null,
+  });
+
+  const handleRightClick = (e, conversation) => {
+    e.preventDefault();
+    setContextMenu({
+      visible: true,
+      x: e.pageX,
+      y: e.pageY,
+      conversation
+    });
+  };
+
+  const handleCloseContextMenu = () => {
+    setContextMenu({ visible: false, x: 0, y: 0, conversation: null });
+  };
+
+  const handleAddToFavorites = async (conversation) => {
+    try {
+      const token = localStorage.getItem("token");
+      const otherUser = conversation.participants.find(
+        participant => participant && participant.eclipseId !== user?.eclipseId
+      );
+
+      const response = await fetch("http://localhost:5001/api/users/add-favorite", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ eclipseId: otherUser.eclipseId }),
+      });
+
+      if (response.ok) {
+        console.log("Added to favorites successfully");
+      } else {
+        console.error("Failed to add to favorites");
+      }
+    } catch (error) {
+      console.error("Error adding to favorites:", error);
+    }
+    handleCloseContextMenu();
+  };
+
+  const handleRemoveFromFriends = async (conversation) => {
+    try {
+      const token = localStorage.getItem("token");
+      const otherUser = conversation.participants.find(
+        participant => participant && participant.eclipseId !== user?.eclipseId
+      );
+
+      const response = await fetch("http://localhost:5001/api/users/remove-connection", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ eclipseId: otherUser.eclipseId }),
+      });
+
+      if (response.ok) {
+        console.log("Removed from friends successfully");
+        // Refresh conversations list
+        await fetchConversations(true);
+        // Clear selected user if it was the removed one
+        if (selectedUser?.eclipseId === otherUser.eclipseId) {
+          setSelectedUser(null);
+        }
+      } else {
+        console.error("Failed to remove from friends");
+      }
+    } catch (error) {
+      console.error("Error removing from friends:", error);
+    }
+    handleCloseContextMenu();
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -67,7 +149,18 @@ const Chats = () => {
     checkAuth();
   }, [navigate]);
 
-  // Fetch read status from server
+  // Close context menu when clicking anywhere
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (contextMenu.visible) {
+        handleCloseContextMenu();
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [contextMenu.visible]);
+
   const fetchReadStatus = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -242,11 +335,9 @@ const Chats = () => {
     return () => clearInterval(conversationPolling);
   }, [user, fetchConversations]);
 
-
-
   const handleLogout = () => {
-     localStorage.removeItem("token");
-      navigate("/login");
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   const handleMenuToggle = () => {
@@ -265,8 +356,6 @@ const Chats = () => {
     setIsConnectionRequestsOpen(false);
     fetchPendingRequestsCount();
   };
-
- 
 
   const handleDeleteAccount = async (password) => {
     try {
@@ -450,6 +539,7 @@ const Chats = () => {
       <div
         className={`conversation-card ${isSelected ? 'selected' : ''} ${isNewConversation ? 'new-conversation' : ''} ${hasUnreadMessages ? 'has-unread' : ''}`}
         onClick={() => handleConversationSelect(conversation)}
+        onContextMenu={(e) => handleRightClick(e, conversation)}
       >
         <div className={`conversation-avatar ${hasUnreadMessages ? 'has-unread' : ''}`}>
           <img
@@ -538,70 +628,77 @@ const Chats = () => {
               <img src={applogo} alt="Eclipse Logo" />
               <h2>Eclipse Chat</h2>
             </div>
-            <div className="userAvatar" onClick={handleMenuToggle}>
-              <img src={user?.avatar} alt="User Avatar" />
+            <div className="actionArea">
+              <div className="connection-request-div" onClick={handleConnectionRequestsToggle}>
+                {pendingRequestsCount > 0 && (
+                  <span className="notification-badge">
+                    {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
+                  </span>
+                )}
+                <i className="ph ph-planet"></i>
+              </div>
+              <div className="userAvatar" onClick={handleMenuToggle}>
+                <img src={user?.avatar} alt="User Avatar" />
+              </div>
             </div>
           </div>
           {/* Chats + Search */}
           <div className="chats">
             <div className="searchArea">
-              <div className="search-header">
-                <div className="chat-header-left">
-                  <h3>Chats</h3>
-                  {totalUnreadCount > 0 && (
-                    <span className="total-unread-badge">
-                      <i className="ph ph-broadcast"></i> Orbital Pings: {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
-                    </span>
-                  )}
-                </div>
-                <div className="interactionButtons">
-                  {totalUnreadCount > 0 && (
-                    <button
-                      className="mark-all-read-btn"
-                      onClick={markAllAsRead}
-                      title="Mark all as read"
-                    >
-                      <span className="material-symbols-outlined">mark_chat_read</span>
-                    </button>
-                  )}
-                  <div className="connection-request-div" onClick={handleConnectionRequestsToggle}>
-                    {pendingRequestsCount > 0 && (
-                      <span className="notification-badge">
-                        {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
-                      </span>
-                    )}
-                    <i className="ph ph-planet"></i>
-                  </div>
-                </div>
-              </div>
               <div className="user-search-section">
                 <UserSearch onUserSelect={handleUserSelect} />
               </div>
             </div>
-
             {/* Conversations List */}
             <div className="contacts">
-              {conversationsLoading ? (
-                <div className="conversations-loading">
-                  <div className="loading-spinner"></div>
-                  <p>Loading conversations...</p>
+              <div className="chatsTab">
+                <div className={`convoTab tabs ${isActive == 'convoTab' ? "activeTab" : ""}`} onClick={() => {
+                  setActiveTab('convoTab');
+                }}>
+                  <h3 className="tabName">Chats</h3>
+                  {totalUnreadCount > 0 && (<div className="counterBubble">{totalUnreadCount > 99 ? '99+' : totalUnreadCount}</div>)}
                 </div>
-              ) : conversations.length === 0 ? (
-                <div className="emptyState">
-                  <img src={noContactsIllustration} alt="No Contacts Illustration" className="empty-illustration" />
-                  <p className="empty-text">No one to orbit yet...</p>
-                  <span className="empty-subtext">Start a new chat and grow your galaxy</span>
+                <div className={`favTab tabs ${isActive == 'favTab' ? "activeTab" : ""}`} onClick={() => {
+                  setActiveTab('favTab');
+                }}>
+                  <h3 className="tabName">Favorite</h3>
                 </div>
-              ) : (
-                <div className="conversations-list">
-                  {conversationItems.map((conversation) => (
-                    <ConversationCard
-                      key={`stable-${conversation.id}-${conversation.lastMessage?.messageId || 'no-msg'}`}
-                      conversation={conversation}
-                    />
-                  ))}
-                </div>
-              )}
+              </div>
+              {
+                isActive === "convoTab" ? (
+                  <>
+                    {conversationsLoading ? (
+                      <div className="conversations-loading">
+                        <div className="loading-spinner"></div>
+                        <p>Loading conversations...</p>
+                      </div>
+                    ) : conversations.length === 0 ? (
+                      <div className="emptyState">
+                        <img src={noContactsIllustration} alt="No Contacts Illustration" className="empty-illustration" />
+                        <p className="empty-text">No one to orbit yet...</p>
+                        <span className="empty-subtext">Start a new chat and grow your galaxy</span>
+                      </div>
+                    ) : (
+                      <div className="conversations-list">
+                        {conversationItems.map((conversation) => (
+                          <ConversationCard
+                            key={`stable-${conversation.id}-${conversation.lastMessage?.messageId || 'no-msg'}`}
+                            conversation={conversation}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="FavConvo">
+                    <div className="underConstruction">
+                     <span className="material-symbols-outlined">construction</span>
+                      <h5>Feature is under development</h5>
+                      <p>Getting our Orbits right.</p>
+                    </div>
+                  </div>
+                )
+              }
             </div>
           </div>
         </div>
@@ -617,6 +714,42 @@ const Chats = () => {
           />
         </div>
 
+        {/* Context Menu */}
+        {contextMenu.visible && (
+          <div
+            className="context-menu"
+            style={{
+              top: contextMenu.y,
+              left: contextMenu.x,
+              position: "fixed",
+              zIndex: 10000
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="menu-item menu-item-danger"
+              onClick={() =>{
+                markAllAsRead();
+                handleCloseContextMenu();
+              } }
+            
+            >
+              <i className="ph ph-envelope-open"></i>Mark all chats read
+            </div>
+            <div
+              className="menu-item"
+              onClick={() => handleAddToFavorites(contextMenu.conversation)}
+            >
+              <i className="ph ph-star"></i> Add to Favorites
+            </div>
+            <div
+              className="menu-item menu-item-danger"
+              onClick={() => handleRemoveFromFriends(contextMenu.conversation)}
+            >
+              <i className="ph ph-user-minus"></i> Remove Connection
+            </div>
+          </div>
+        )}
       </div>
 
       {/* User Menu Modal */}
@@ -627,8 +760,6 @@ const Chats = () => {
         onLogout={handleLogout}
         onDeleteAccount={handleDeleteAccount}
       />
-
-      
 
       {/* Connection Requests Modal */}
       <ConnectionRequestsModal

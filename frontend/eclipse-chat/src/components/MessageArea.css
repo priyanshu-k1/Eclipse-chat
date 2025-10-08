@@ -2,17 +2,17 @@
 
 .message-area-container {
   display: flex;
+  flex: 1!important;
+  background-size: cover!important;
   flex-direction: column;
   height: 100vh;
   background: radial-gradient(ellipse at top, #1f1f76 5%, #000000 73%);
   position: relative;
   overflow: hidden !important ;
-  min-width:100% !important;
   align-items: center;
   justify-content: center;
   background-size: cover;
-  filter: grayscale(300px);
-
+ 
 }
 /* Animated particles background */
 .message-area-container::before {
@@ -73,7 +73,7 @@
   }
 }
 
-/* Welcome Container (when no user selected) */
+/* Welcome Container*/
 .welcome-container {
   display: flex;
   flex-direction: column;
