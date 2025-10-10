@@ -35,9 +35,9 @@ const validateFile = (file) => {
     return { valid: false, error: 'File size exceeds 50MB limit' };
   }
 
-  if (!ALLOWED_TYPES.includes(file.mimetype)) {
-    return { valid: false, error: 'File type not allowed' };
-  }
+  // if (!ALLOWED_TYPES.includes(file.mimetype)) {
+  //   return { valid: false, error: 'File type not allowed' };
+  // } need to improve it so later I will implement.
 
   return { valid: true };
 };
