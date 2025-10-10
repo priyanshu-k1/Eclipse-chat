@@ -15,4 +15,200 @@
     <script type="module" src="/src/main.jsx"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
   </body>
+<noscript>
+  <style>
+    body { overflow: hidden !important; margin: 0 !important; }
+    .stars {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+        background: radial-gradient(circle at 20% 10%, #0b0b2f 0%, #000 65%);
+    }
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #FFFFFF;
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: twinkle 4s ease-in-out infinite;
+    }
+
+    @keyframes twinkle {
+    0%, 100% { 
+      opacity: 0.3; 
+      transform: scale(1);
+    }
+    50% { 
+      opacity: 1; 
+      transform: scale(1.5);
+    }
+  }
+
+    .star:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+    .star:nth-child(2) { top: 80%; left: 20%; animation-delay: 1s; }
+    .star:nth-child(3) { top: 10%; left: 50%; animation-delay: 2s; }
+    .star:nth-child(4) { top: 70%; left: 80%; animation-delay: 0.5s; }
+    .star:nth-child(5) { top: 30%; left: 70%; animation-delay: 1.5s; }
+    .star:nth-child(6) { top: 60%; left: 15%; animation-delay: 2.5s; }
+    .star:nth-child(7) { top: 15%; left: 85%; animation-delay: 3s; }
+    .star:nth-child(8) { top: 90%; left: 60%; animation-delay: 0.8s; }
+    .star:nth-child(9) { top: 40%; left: 25%; animation-delay: 1.8s; }
+    .star:nth-child(10) { top: 85%; left: 90%; animation-delay: 2.2s; }
+    .star:nth-child(11) { top: 25%; left: 40%; animation-delay: 3.5s; }
+    .star:nth-child(12) { top: 75%; left: 45%; animation-delay: 0.3s; }
+    .star:nth-child(13) { top: 25%; left: 40%; animation-delay: 3.5s; }
+    .star:nth-child(14) { top: 75%; left: 45%; animation-delay: 0.3s; }
+    .star:nth-child(15) { top: 25%; left: 40%; animation-delay: 3.5s; }
+    .star:nth-child(16) { top: 75%; left: 45%; animation-delay: 0.3s; }
+    .star:nth-child(17) { top: 25%; left: 40%; animation-delay: 3.5s; }
+    .star:nth-child(18) { top: 75%; left: 45%; animation-delay: 0.3s; }
+    .star:nth-child(19) { top: 25%; left: 40%; animation-delay: 3.5s; }
+    .star:nth-child(20) { top: 75%; left: 45%; animation-delay: 0.3s; }
+    .star:nth-child(21) { top: 25%; left: 40%; animation-delay: 3.5s; }
+    .star:nth-child(22) { top: 75%; left: 45%; animation-delay: 0.4s; }
+    .star:nth-child(22) { top: 75%; left: 45%; animation-delay: 0.5s; }
+    .star:nth-child(23) { top: 75%; left: 45%; animation-delay: 1.3s; }
+    .star:nth-child(24) { top: 75%; left: 45%; animation-delay: 0.1s; }
+    .star:nth-child(25) { top: 75%; left: 45%; animation-delay: 0.2s; }
+    .star:nth-child(26) { top: 75%; left: 45%; animation-delay: 0.3s; }
+    .star:nth-child(27) { top: 75%; left: 45%; animation-delay: 1.7s; }
+    .star:nth-child(28) { top: 75%; left: 45%; animation-delay: 0.9s; }
+    .star:nth-child(29) { top: 75%; left: 45%; animation-delay: 0.5s; }
+    .star:nth-child(30) { top: 75%; left: 45%; animation-delay: 1.1s; }
+
+    .no-js-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 24px;
+      text-align: center;
+      z-index: 214748364;
+      background: transparent;
+      color: #dfe9ff;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    .heading{
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      width:100%;
+      height:fit-content;
+
+    }
+    .material-symbols-outlined{
+      font-size: 3rem;
+       color: #ff7171;
+    }
+
+    .no-js-logo {
+      width: 96px;
+      height: 96px;
+      object-fit: contain;
+      margin-bottom: 18px;
+      filter: drop-shadow(0 10px 30px rgba(0,160,255,0.12));
+    }
+
+    .no-js-overlay h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.25rem, 2.2vw, 2rem);
+      color: #ff7171;
+      text-shadow: 0 0 12px rgba(255,113,113,0.15);
+      letter-spacing: 0.2px;
+    }
+
+    .no-js-overlay p {
+      margin: 6px 0;
+      max-width: 720px;
+      line-height: 1.55;
+      color: #c8d6ff;
+      font-size: 1rem;
+    }
+
+    .no-js-help {
+      margin-top: 12px;
+      font-size: 0.92rem;
+      color: #9fb5ff;
+      opacity: 0.95;
+    }
+
+    .no-js-overlay a {
+      color: #66f0ff;
+      text-decoration: underline;
+      margin-top: 12px;
+      display: inline-block;
+    }
+
+    @keyframes pulse {
+      from { box-shadow: 0 0 10px rgba(0,200,255,0.06); }
+      to   { box-shadow: 0 0 28px rgba(0,200,255,0.12); }
+    }
+    .no-js-overlay { animation: pulse 1s ease-in-out infinite alternate; }
+  </style>
+  <div class="stars">
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+  </div>
+  <div class="no-js-overlay" role="dialog" aria-label="JavaScript required">
+    <img src="https://qagrnyaazccsvfcsehgd.supabase.co/storage/v1/object/public/chat-files/eclipseImageDirectory/Eclipse-Logo.png" alt="Eclipse Chat logo" class="no-js-logo" />
+    <div class="heading">
+      <span class="material-symbols-outlined">warning</span>
+      <h1>JavaScript Disabled</h1>
+    </div>
+    <p>
+      Eclipse Chat requires JavaScript to run securely and protect your privacy.
+      This site intentionally disables access when JavaScript is turned off.
+      Please enable JavaScript in your browser to continue.
+    </p>
+
+    <div class="no-js-help">
+      Quick help:
+      <br/>
+      • Chrome: Open DevTools → Command Menu (Ctrl/Cmd+Shift+P) → type <em>Disable JavaScript</em> to toggle it (toggle off to enable JS).  
+      • Or visit <a href="https://www.enable-javascript.com/" target="_blank" rel="noopener noreferrer">How to enable JavaScript</a>.
+    </div>
+  </div>
+</noscript>
+
 </html>

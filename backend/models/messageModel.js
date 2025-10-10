@@ -23,6 +23,18 @@ const messageSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  messageType: {
+    type: String,
+    enum: ['text', 'file'],
+    default: 'text'
+  },
+  fileMetadata: {
+    fileName: String,
+    fileSize: Number,
+    fileType: String,
+    fileUrl: String,
+    storagePath: String
+  },
   isSavedBySender: {
     type: Boolean,
     default: false

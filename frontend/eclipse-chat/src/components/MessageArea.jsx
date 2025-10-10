@@ -114,6 +114,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     message: '',
     type: 'info'
   });
+  
 
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -401,9 +402,7 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
 
     // Listen for message seen updates
     socketRef.current.on('message_seen_update', (data) => {
-      const { messageId, seenAt, expiresAt } = data;
-      console.log('Message seen update received:', messageId, { seenAt, expiresAt });
-      
+      const { messageId, seenAt, expiresAt } = data;      
       setMessages(prevMessages =>
         prevMessages.map(msg => {
           if (msg.id === messageId) {
@@ -411,11 +410,8 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
               ...msg, 
               isSeen: true, 
               seenAt: seenAt,
-              expiresAt: expiresAt || msg.expiresAt // Use new expiresAt if provided
-            };
-            
-            console.log('Updated message state:', updatedMsg);
-            
+              expiresAt: expiresAt || msg.expiresAt
+            };            
             // NOW set up expiration timeout since message is seen
             if (updatedMsg.expiresAt) {
               setupMessageExpirationTimeout(updatedMsg);
@@ -489,7 +485,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
   const setupMessageExpirationTimeout = useCallback((messageData) => {
     if (!messageData.expiresAt) return;
     if (!messageData.isSeen) {
-      console.log(`Message ${messageData.id} not seen yet, skipping expiration setup`);
       return;
     }
 
@@ -506,7 +501,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
       }, timeUntilExpiration);
 
       messageExpirationTimeoutsRef.current.set(messageData.id, timeoutId);
-      console.log(`Message ${messageData.id} will expire in ${Math.round(timeUntilExpiration / 1000)}s`);
     } else {
       setMessages(prevMessages =>
         prevMessages.filter(msg => msg.id !== messageData.id)
@@ -554,8 +548,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
 
     try {
       const roomId = [currentUser.eclipseId, selectedUser.eclipseId].sort().join('_');
-      
-      console.log('Marking message as seen:', messageId);
       // Emit socket event to mark message as seen
       socketRef.current.emit('message_seen', {
         messageId,
@@ -580,7 +572,6 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
             if (message && 
                 message.sender.eclipseId !== currentUser.eclipseId && 
                 !message.isSeen) {
-              console.log("Message is visible and should be marked as seen:", messageId);
               markMessageAsSeen(messageId);
             }
           }
@@ -917,7 +908,11 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
     <div className="message-area-container" 
         style={
           {backgroundImage: `url(${backgroundDoodle})`}
-          }>
+          }
+      onContextMenu={(e) => {
+        e.preventDefault();
+      }}
+          >
       <div className="chat-header">
         <div className="chat-user-info">
           <div className="chat-avatar">
@@ -1028,8 +1023,12 @@ const MessageArea = ({ selectedUser, currentUser, onBack, onMessageSent }) => {
 
       <FileUpload 
         isOpen={isFileUploadOpen}
-        onClose={()=>{
-          setFileUploadOpen(false)
+        onClose={() => setFileUploadOpen(false)}
+        recipientEclipseId={selectedUser?.eclipseId}
+        onFilesSent={(completedFiles) => {
+          console.log('Files sent:', completedFiles);
+          fetchConversation();
+          setFileUploadOpen(false);
         }}
       />
       <NotificationModal

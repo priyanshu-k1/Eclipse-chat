@@ -30,7 +30,287 @@
   align-self: flex-start;
   align-items: flex-start;
 }
+/* File content */
+.message-bubble.file-message {
+  max-width: 400px;
+}
+.file-message-wrapper {
+  width: 100%;
+  
+}
+.image-preview-container {
+  position: relative;
+  width: 100%;
+  max-width: 350px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transform: scale(1.2);
+  transition: transform 0.6s ease-in-out;
+}
+.image-preview-container:hover {
+  transform: scale(1.3);
+}
 
+.message-image-preview {
+  width: 100%;
+  height: auto;
+  max-height: 400px;
+  object-fit: cover;
+  display: block;
+  border-radius: 12px;
+}
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 12px;
+}
+.image-preview-container:hover .image-overlay {
+  opacity: 1;
+}
+
+.image-overlay .material-symbols-outlined {
+  font-size: 48px;
+  color: white;
+}
+/* File Attachment Styles */
+.file-attachment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  min-width: 250px;
+  transition: background 0.3s ease;
+}
+
+.file-attachment:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.file-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background: rgba(102, 126, 234, 0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.file-type-icon {
+  font-size: 28px;
+  color: #667eea;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name-attachment {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e4e6ea;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.file-size-attachment {
+  font-size: 12px;
+  color: rgba(228, 230, 234, 0.6);
+}
+.message-bubble.from-me .file-name-attachment {
+  color: #ffffff;
+}
+
+.message-bubble.from-me .file-size-attachment {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.message-bubble.from-me .file-icon-wrapper {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.message-bubble.from-me .file-type-icon {
+  color: #ffffff;
+}
+
+/* Download Button Styles */
+.download-button {
+  background: rgba(34, 197, 94, 0.2) !important;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+  color: #4ade80 !important;
+}
+
+.download-button:hover {
+  background: rgba(34, 197, 94, 0.3) !important;
+  border-color: rgba(34, 197, 94, 0.5) !important;
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3) !important;
+}
+/* Image Viewer Modal Styles */
+.image-viewer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.265);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5000!important;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.image-viewer-container {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.image-viewer-close {
+  position: absolute;
+  top: 1rem;
+  left:1rem;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s ease;
+  z-index: 6;
+}
+
+.image-viewer-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
+  background-color: #e7525223;
+}
+
+.image-viewer-close .material-symbols-outlined {
+  font-size: 24px;
+}
+
+.image-viewer-image {
+  max-width: 100%;
+  max-height: calc(90vh - 80px);
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: zoomIn 0.3s ease;
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.image-viewer-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  font-size: 14px;
+  min-width: 300px;
+}
+
+.image-viewer-download {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 8px;
+  color: #4ade80;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.image-viewer-download:hover {
+  background: rgba(34, 197, 94, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.image-viewer-download .material-symbols-outlined {
+  font-size: 20px;
+}
+
+/* Responsive adjustments for file messages */
+@media (max-width: 768px) {
+  .message-bubble.file-message {
+    max-width: 90%;
+  }
+
+  .image-preview-container {
+    max-width: 100%;
+  }
+
+  .file-attachment {
+    min-width: 200px;
+  }
+
+  .image-viewer-close {
+    top: 10px;
+    right: 10px;
+  }
+
+  .image-viewer-info {
+    flex-direction: column;
+    min-width: auto;
+    width: 100%;
+  }
+}
 /* Message Content */
 .message-content {
   position: relative;
@@ -319,7 +599,7 @@
 .message-actions {
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-90%);
   display: flex;
   gap: 6px;
   opacity: 0;
@@ -329,11 +609,11 @@
 }
 
 .message-bubble.from-me .message-actions {
-  left: -70px;
+  left: -100px;
 }
 
 .message-bubble.from-them .message-actions {
-  right: -70px;
+  right: -100px;
 }
 
 .message-bubble:hover .message-actions {
@@ -662,3 +942,4 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+

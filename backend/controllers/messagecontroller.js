@@ -272,6 +272,8 @@ const getConversation = async (req, res) => {
             sender: message.sender,
             receiver: message.receiver,
             timestamp: message.createdAt,
+            messageType: message.messageType || 'text',
+            fileMetadata: message.fileMetadata || null,
             expiresAt: message.expiresAt,
             isSavedBySender: message.isSavedBySender,
             isSavedByReceiver: message.isSavedByReceiver,
@@ -352,7 +354,9 @@ const getAllConversations = async (req, res) => {
                         authTag: '$lastMessage.authTag',
                         sender: '$lastMessage.sender',
                         createdAt: '$lastMessage.createdAt',
-                        expiresAt: '$lastMessage.expiresAt'
+                        expiresAt: '$lastMessage.expiresAt',
+                        messageType: '$lastMessage.messageType',
+                        fileMetadata: '$lastMessage.fileMetadata'
                     }
                 }
             },
@@ -367,7 +371,9 @@ const getAllConversations = async (req, res) => {
                 content: decryptMessage(conv.lastMessage.content, conv.lastMessage.iv, conv.lastMessage.authTag),
                 isFromMe: conv.lastMessage.sender.toString() === req.user.id,
                 timestamp: conv.lastMessage.createdAt,
-                expiresAt: conv.lastMessage.expiresAt
+                expiresAt: conv.lastMessage.expiresAt,
+                messageType: conv.lastMessage.messageType || 'text',
+                fileMetadata: conv.lastMessage.fileMetadata || null
             }
         }));
 

@@ -187,6 +187,7 @@
   z-index: 3;
   box-shadow: 0 4px 20px rgba(108, 99, 255, 0.1);
   width:100%;
+
 }
 
 .back-button {
@@ -201,6 +202,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index:5;
 }
 
 .back-button:hover {
@@ -215,6 +217,7 @@
   align-items: center;
   gap: 0.2rem;
   flex: 1;
+  
 }
 
 .chat-avatar {

@@ -13,6 +13,8 @@ const userRoutes = require('./routes/userRoutes');
 const orbitRoutes = require('./routes/orbitRoutes');
 const {initializeSocket} = require('./socket/socketHandler');
 const readStatusRoutes = require('./routes/readStatusRoutes');
+const messageRoutes=require('./routes/messageRoutes')
+const fileRoutes = require('./routes/fileRoutes');
 
 
 // Initialize Express app and HTTP server
@@ -51,7 +53,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes); 
 app.use('/api/orbits', orbitRoutes);
 app.use('/api/messages/read-status', readStatusRoutes);
-app.use('/api/messages', require('./routes/messageRoutes'));
+app.use('/api/messages',messageRoutes);
+app.use('/api/files', fileRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -61,8 +64,6 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? err.message : {}
   });
 });
-
-
 
 // Database connection and server startup
 const startServer = async () => {

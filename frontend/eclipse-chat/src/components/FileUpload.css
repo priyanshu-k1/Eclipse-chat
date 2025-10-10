@@ -327,6 +327,9 @@
     color: rgba(78, 39, 105, 0.938);
     transform: translateX(6px) translateY(-5px);
 }
+.spinning {
+  animation: spin 1s linear infinite;
+}
 
 @keyframes slideInItem {
   from {
@@ -358,3 +361,8 @@
     transform: scale(1) translateY(0);
   }
 }
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+

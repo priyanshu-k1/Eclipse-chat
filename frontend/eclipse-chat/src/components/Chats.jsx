@@ -42,6 +42,7 @@ const Chats = () => {
       y: e.pageY,
       conversation
     });
+    console.log("remove this logger later...")
   };
 
   const handleCloseContextMenu = () => {
@@ -620,7 +621,9 @@ const Chats = () => {
 
   return (
     <>
-      <div className="chats-container">
+      <div className="chats-container"  onContextMenu={(e) => {
+        e.preventDefault();
+      }}>
         <div className="innerContainers contactsArea">
           {/* Hero Section */}
           <div className="heroSection">
@@ -643,7 +646,7 @@ const Chats = () => {
             </div>
           </div>
           {/* Chats + Search */}
-          <div className="chats">
+          <div className="chats" >
             <div className="searchArea">
               <div className="user-search-section">
                 <UserSearch onUserSelect={handleUserSelect} />
