@@ -3,6 +3,7 @@ const Orbit = require('../models/orbitModel');
 const findUserByEclipseId = require('../utils/findUserByEclipseId');
 const { encryptMessage, decryptMessage } = require('../micro-service/encryptionService');
 
+
 const sendMessage = async (req, res) => {
     try {
         const { recipientEclipseId, content } = req.body;

@@ -1,6 +1,5 @@
 const { supabase } = require('../config/supabase');
 const Message = require('../models/messageModel');
-const User = require('../models/userModel');
 const { encryptMessage } = require('../micro-service/encryptionService');
 
 // Generate unique file name
